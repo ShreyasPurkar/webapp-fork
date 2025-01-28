@@ -1,0 +1,188 @@
+{
+	"info": {
+		"_postman_id": "21b73238-9c19-4328-997e-75508ce5c9cf",
+		"name": "regression",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "41169784"
+	},
+	"item": [
+		{
+			"name": "HealthCheck (Happy Flow)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/healthz",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"healthz"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "HealthCheck (Negative - Request Payload)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"checkId\": 123\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/healthz",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"healthz"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "HealthCheck (Negative - Query Params)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/healthz?key=value",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"healthz"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "value"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "HealthCheck (Negative - Invalid Method)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 405\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/healthz",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"healthz"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
