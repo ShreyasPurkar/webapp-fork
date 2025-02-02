@@ -26,9 +26,16 @@ git clone git@github.com:NortheasternUniversity-CSYE6225/webapp.git
   ./run.sh
 ```
 
-### 4. Once the application starts, you can access it at:
+### 4. Run the Postgres server
+
+### 5. Once the application starts, you can access it at:
 ```angular2html
 http://localhost:8080
+```
+## Testing Instructions
+To run API testing suite run
+```java
+  mvn test
 ```
 
 ## Troubleshooting
