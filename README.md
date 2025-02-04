@@ -34,8 +34,8 @@ http://localhost:8080
 ```
 ## Testing Instructions
 To run API testing suite run
-```java
-  mvn test
+```bash
+  ./test.sh
 ```
 
 ## Troubleshooting
