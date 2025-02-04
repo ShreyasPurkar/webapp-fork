@@ -154,6 +154,6 @@ public class HealthCheckApiTest {
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
 
-        System.setProperty("spring.datasource.hikari.connection-timeout", "1000");
+        System.setProperty("spring.datasource.hikari.connection-timeout", "30000");
     }
 }
