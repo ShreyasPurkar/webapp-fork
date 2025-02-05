@@ -1,2 +1,12 @@
-/mvnw text eol=lf
+# Ensure shell scripts always use LF
+*.sh text eol=lf
+
+# Ensure shell script executables retain execute permission
+*.sh text eol=lf
+*.sh binary
+
+# Ensure `mvnw` uses LF (already in your file)
+mvnw text eol=lf
+
+# Ensure Windows batch files (`.cmd`) use CRLF
 *.cmd text eol=crlf
