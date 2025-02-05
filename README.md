@@ -26,10 +26,33 @@ git clone git@github.com:NortheasternUniversity-CSYE6225/webapp.git
   ./run.sh
 ```
 
-### 4. Once the application starts, you can access it at:
+### 4. Run the Postgres server
+
+### 5. Once the application starts, you can access it at:
 ```angular2html
 http://localhost:8080
 ```
+## Testing Instructions
+To run API testing suite run
+```bash
+  ./test.sh
+```
+
+## Deployment Instructions
+ - Login to the server
+ - Upload the webapp.zip file along with deployment script
+    ```bash
+      scp -i ~/.ssh/do deploy.sh root@<IP-Address>:/tmp
+      scp -i ~/.ssh/do webapp.zip root@<IP-Address>:/tmp
+   ```
+ - Make the deployment script executable
+    ```bash
+      chmod +x deploy.sh
+    ```
+ - Execute the deployment script  
+    ```bash
+      sudo ./deploy.sh  
+    ```
 
 ## Troubleshooting
 #### If you encounter issues during the build or setup process:
