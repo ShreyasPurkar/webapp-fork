@@ -59,7 +59,7 @@ jobs:
           sudo apt-get install -y postgresql-client
           PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "SELECT 1;"
 
-      # Step 5: Build and run the Maven-based tests    
+    
       - name: Build and Run Tests
         run: |
           mvn clean install -DskipTests
