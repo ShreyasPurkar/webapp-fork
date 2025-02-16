@@ -1,3 +1,4 @@
+# Workflow for Integration tests
 name: Integration Tests
 
 # Trigger the workflow on pull requests to the main branch
