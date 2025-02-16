@@ -2,9 +2,11 @@ name: Integration Tests
 
 # Trigger the workflow on pull requests to the main branch
 on:
-  pull_request:
+  pull_request_target:
     branches:
-      - main  
+      - main 
+    types: [opened, synchronize, reopened]  
+      
 jobs:
   # The job integration-tests runs on the latest Ubuntu environment
   integration-tests:
