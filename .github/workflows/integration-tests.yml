@@ -59,7 +59,21 @@ jobs:
           sudo apt-get install -y postgresql-client
           PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "SELECT 1;"
 
-    
+      # Step 5: Create the test schema if it does not exist    
+      - name: Create Schema if Not Exists
+        run: |
+          sudo apt-get install -y postgresql-client
+          PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "
+          DO \$\$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = 'test') THEN
+              CREATE SCHEMA test;
+            END IF;
+          END;
+          \$\$
+          "
+
+      # Step 6: Build and run the Maven-based tests    
       - name: Build and Run Tests
         run: |
           mvn clean install -DskipTests
