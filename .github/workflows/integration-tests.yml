@@ -24,7 +24,7 @@ jobs:
           POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports:
           - 5432:5432
-        # Configures health checks for the Postgres service  
+        # Configures health required checks for the Postgres service  
         options: >-
           --health-cmd="pg_isready -U ${{ secrets.DB_USERNAME }} -d ${{ secrets.DB_NAME }}"
           --health-interval 10s
