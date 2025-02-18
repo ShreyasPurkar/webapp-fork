@@ -36,6 +36,8 @@ jobs:
       # Step 1: Checkout the repository to get the latest code
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
       # Step 2: Set up Java 19
       - name: Set Up Java v19
@@ -81,13 +83,4 @@ jobs:
       # Step 7: Build and run tests
       - name: Build and Run Tests
         run: |
-          mvn clean install 
-
-      # Step 8: List Test Results to Verify Which Tests Ran
-      - name: List Test Results
-        run: |
-          find target/surefire-reports -name "*.txt" -exec cat {} \;
-
-      # Step 9: Run Tests with Verbose Logging for Debugging
-      - name: Run Tests with Verbose Logging
-        run: mvn test -X
+          mvn clean install

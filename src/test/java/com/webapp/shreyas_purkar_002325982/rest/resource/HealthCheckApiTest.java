@@ -35,11 +35,8 @@ public class HealthCheckApiTest {
                 .when()
                 .get("/healthz");
 
-        System.out.println("Response status: " + response.getStatusCode());
-        System.out.println("Response body: " + response.getBody().asString());
-
         response.then()
-                .statusCode(400)  
+                .statusCode(200)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -48,10 +45,11 @@ public class HealthCheckApiTest {
     @Test
     void healthCheck_MultipleRequests() {
         for (int i = 0; i < 5; i++) {
-            given()
-            .when()
-                    .get("/healthz")
-            .then()
+            Response response = given()
+                    .when()
+                    .get("/healthz");
+
+            response.then()
                     .statusCode(200)
                     .header("X-Content-Type-Options", "nosniff")
                     .header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -108,8 +106,6 @@ public class HealthCheckApiTest {
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
     }
-
-
 
     @Test
     void healthCheck_DatabaseConnectionFailure_ReturnsServiceUnavailable() {
