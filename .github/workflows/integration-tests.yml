@@ -81,13 +81,4 @@ jobs:
       # Step 7: Build and run tests
       - name: Build and Run Tests
         run: |
-          mvn clean install 
-
-      # Step 8: List Test Results to Verify Which Tests Ran
-      - name: List Test Results
-        run: |
-          find target/surefire-reports -name "*.txt" -exec cat {} \;
-
-      # Step 9: Run Tests with Verbose Logging for Debugging
-      - name: Run Tests with Verbose Logging
-        run: mvn test -X
+          mvn clean install
