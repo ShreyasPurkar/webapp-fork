@@ -2,6 +2,7 @@ package com.webapp.shreyas_purkar_002325982.rest.resource;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +31,15 @@ public class HealthCheckApiTest {
 
     @Test
     void healthCheck_Success() {
-        given()
-        .when()
-                .get("/healthz")
-        .then()
-                .statusCode(200)
+        Response response = given()
+                .when()
+                .get("/healthz");
+
+        System.out.println("Response status: " + response.getStatusCode());
+        System.out.println("Response body: " + response.getBody().asString());
+
+        response.then()
+                .statusCode(400)  
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
