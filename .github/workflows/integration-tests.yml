@@ -45,7 +45,7 @@ jobs:
           java-version: '19'
           cache: 'maven'
 
-      # Step 3: Set environment variables required for database connection    
+      # Step 3: Set environment variables required for database connection
       - name: Set Environment Variables
         run: |
           echo "DB_HOST=localhost" >> $GITHUB_ENV
@@ -54,13 +54,13 @@ jobs:
           echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
 
-      # Step 4: Verify that the database is accessible    
+      # Step 4: Verify that the database is accessible
       - name: Verify Database Connection
         run: |
           sudo apt-get install -y postgresql-client
           PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "SELECT 1;"
 
-      # Step 5: Create the test schema if it does not exist    
+      # Step 5: Create the test schema if it does not exist
       - name: Create Schema if Not Exists
         run: |
           sudo apt-get install -y postgresql-client
@@ -81,4 +81,13 @@ jobs:
       # Step 7: Build and run tests
       - name: Build and Run Tests
         run: |
-          mvn clean install
+          mvn clean install 
+
+      # Step 8: List Test Results to Verify Which Tests Ran
+      - name: List Test Results
+        run: |
+          find target/surefire-reports -name "*.txt" -exec cat {} \;
+
+      # Step 9: Run Tests with Verbose Logging for Debugging
+      - name: Run Tests with Verbose Logging
+        run: mvn test -X
