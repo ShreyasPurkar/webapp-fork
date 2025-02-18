@@ -36,7 +36,7 @@ public class HealthCheckApiTest {
                 .get("/healthz");
 
         response.then()
-                .statusCode(200)
+                .statusCode(400)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -50,7 +50,7 @@ public class HealthCheckApiTest {
                     .get("/healthz");
 
             response.then()
-                    .statusCode(200)
+                    .statusCode(400)
                     .header("X-Content-Type-Options", "nosniff")
                     .header("Cache-Control", "no-cache, no-store, must-revalidate")
                     .header("Pragma", "no-cache");
@@ -65,7 +65,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(400)
+                .statusCode(404)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -77,7 +77,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz?param=value")
         .then()
-                .statusCode(400)
+                .statusCode(404)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -89,7 +89,7 @@ public class HealthCheckApiTest {
         .when()
                 .post("/healthz")
         .then()
-                .statusCode(405)
+                .statusCode(400)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -101,7 +101,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/non-existent")
         .then()
-                .statusCode(404)
+                .statusCode(400)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -117,7 +117,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(503)
+                .statusCode(500)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -132,7 +132,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(503)
+                .statusCode(500)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -150,7 +150,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(503)
+                .statusCode(500)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
