@@ -3,7 +3,7 @@ name: Integration Tests
 
 # Trigger the workflow on pull requests to the main branch
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main 
     types: [opened, synchronize, reopened]  
