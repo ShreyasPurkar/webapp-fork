@@ -2,7 +2,6 @@ package com.webapp.shreyas_purkar_002325982.rest.resource;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +30,11 @@ public class HealthCheckApiTest {
 
     @Test
     void healthCheck_Success() {
-        Response response = given()
-                .when()
-                .get("/healthz");
-
-        response.then()
-                .statusCode(400)
+        given()
+        .when()
+                .get("/healthz")
+        .then()
+                .statusCode(200)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -45,12 +43,11 @@ public class HealthCheckApiTest {
     @Test
     void healthCheck_MultipleRequests() {
         for (int i = 0; i < 5; i++) {
-            Response response = given()
-                    .when()
-                    .get("/healthz");
-
-            response.then()
-                    .statusCode(400)
+            given()
+            .when()
+                    .get("/healthz")
+            .then()
+                    .statusCode(200)
                     .header("X-Content-Type-Options", "nosniff")
                     .header("Cache-Control", "no-cache, no-store, must-revalidate")
                     .header("Pragma", "no-cache");
@@ -65,7 +62,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(404)
+                .statusCode(400)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -77,7 +74,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz?param=value")
         .then()
-                .statusCode(404)
+                .statusCode(400)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -89,7 +86,7 @@ public class HealthCheckApiTest {
         .when()
                 .post("/healthz")
         .then()
-                .statusCode(400)
+                .statusCode(404)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -101,7 +98,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/non-existent")
         .then()
-                .statusCode(400)
+                .statusCode(404)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -117,7 +114,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(500)
+                .statusCode(503)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -132,7 +129,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(500)
+                .statusCode(503)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
@@ -150,7 +147,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(500)
+                .statusCode(503)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
