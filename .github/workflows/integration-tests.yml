@@ -74,8 +74,11 @@ jobs:
           \$\$
           "
 
-      # Step 6: Build and run the Maven-based tests    
+      # Step 6: Clear maven caches
+      - name: Clear Maven Cache
+        run: mvn dependency:purge-local-repository
+
+      # Step 7: Build and run tests
       - name: Build and Run Tests
         run: |
-          mvn clean install -DskipTests
-          mvn test
+          mvn clean install
