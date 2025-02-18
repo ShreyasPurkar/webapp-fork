@@ -35,6 +35,7 @@ public class HealthCheckApiTest {
                 .when()
                 .get("/healthz");
 
+        
         System.out.println("Response status: " + response.getStatusCode());
         System.out.println("Response body: " + response.getBody().asString());
 
