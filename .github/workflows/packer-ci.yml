@@ -1,0 +1,55 @@
+name: Packer Template Validation
+
+on:
+  pull_request:
+    branches: 
+      - main
+    types: [opened, synchronize, reopened]  
+    paths:
+      - '*.pkr.hcl'
+
+env: 
+  PKR_VERSION: "1.8.5"       
+
+jobs:
+  validate:
+    name: Validate Packer Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PKR_VERSION }}
+
+      - name: Create Variables File
+        run: |
+            cat << EOF > variables.pkrvars.hcl
+            aws_region                  = "us-east-2"
+            aws_instance_type           = "t2.micro"
+            aws_source_image            = "ubuntu/images/*ubuntu-noble-24.04-amd64-server-*"
+            aws_demo_account_id         = "dummy-id"
+            aws_volume_size             = 20
+            aws_volume_type             = "gp2"
+            gcp_dev_project_id          = "dummy-project"
+            gcp_zone                    = "us-central1-a"
+            gcp_demo_project_id         = "dummy-project"
+            gcp_machine_type            = "e2-medium"
+            gcp_source_image            = "ubuntu-2404-noble-amd64-v20250214"
+            gcp_source_image_family     = "ubuntu-2404-lts-noble"
+            gcp_source_image_project_id = ["ubuntu-os-cloud"]
+            gcp_disk_size               = 20
+            gcp_disk_type               = "pd-standard"
+            ssh_username                = "ubuntu"
+            db_name                     = "dummy_db"
+            db_username                 = "dummy_user"
+            db_password                 = "dummy_password"
+            EOF          
+
+      - name: Packer Format Check
+        run: packer fmt -check .
+
+      - name: Packer Validate
+        run: packer validate -var-file=variables.pkrvars.hcl .
