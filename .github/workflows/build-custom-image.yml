@@ -8,6 +8,8 @@ on:
 env: 
   PKR_VERSION: "1.8.5" 
   JAVA_VERSION: "19"   
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  GCP_ZONE: ${{ vars.GCP_ZONE }}
 
 jobs:
   # The job integration-tests runs on the latest Ubuntu environment
@@ -140,6 +142,22 @@ jobs:
             -var "db_username=${{ secrets.DB_USERNAME }}" \
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
             -var "github_workspace=${{ github.workspace }}" \
+            -var "aws_region=${{ env.AWS_REGION }}" \
+            -var "gcp_zone=${{ env.GCP_ZONE }}" \
             webapp.pkr.hcl
+
+          IMAGE_NAME=$(packer output -json | jq -r '.[0].built[0].image_name')
+          echo "Generated Image Name: $IMAGE_NAME"
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV  
         env:
           PACKER_LOG: 1
+
+      - name: Share image with GCP DEMO project
+        run: |
+            gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
+            echo "Sharing image: $IMAGE_NAME"
+            gcloud compute images add-iam-policy-binding $IMAGE_NAME \
+              --member=serviceAccount:${{ secrets.GCP_DEMO_PROJECT_EMAIL }} \
+              --role=roles/compute.imageUser \
+              --project=${{ secrets.GCP_DEMO_PROJECT_ID }}
+        

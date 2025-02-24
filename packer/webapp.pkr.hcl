@@ -136,8 +136,7 @@ source "amazon-ebs" "webapp" {
   ssh_timeout             = "30m"
   ssh_handshake_attempts  = "20"
   pause_before_connecting = "10s"
-  ami_users               = []
-  encrypt_boot            = true
+  ami_users               = [var.aws_demo_account_id]
 
   source_ami_filter {
     filters = {
@@ -164,7 +163,7 @@ source "amazon-ebs" "webapp" {
 }
 
 source "googlecompute" "webapp" {
-  image_name              = "custom-app-image-{{timestamp}}"
+  image_name              = "webapp-custom-image-{{timestamp}}"
   image_description       = "Custom image for webapp with Java and PostgreSQL"
   project_id              = var.gcp_dev_project_id
   source_image            = var.gcp_source_image
