@@ -1,0 +1,55 @@
+name: Packer Template Validation
+
+on:
+  pull_request:
+    branches: 
+      - main
+    types: [opened, synchronize, reopened]  
+
+env: 
+  PKR_VERSION: "1.8.5"    
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  GCP_ZONE: ${{ vars.GCP_ZONE }}   
+
+jobs:
+  validate:
+    name: Validate Packer Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PKR_VERSION }} 
+
+      - name: Initialize Packer
+        run: |
+          cd packer
+          packer init .   
+          
+      - name: Build and Zip Application
+        run: |
+            mvn clean package -DskipTests
+            cd target
+            zip -r webapp.zip webapp-0.0.1-SNAPSHOT.jar    
+
+      - name: Packer Format Check
+        run: |
+          cd packer
+          packer fmt -check .
+
+      - name: Packer Validate
+        run: |
+          cd packer
+          packer validate \
+            -var "aws_demo_account_id=${{ secrets.AWS_DEMO_ACCOUNT_ID }}" \
+            -var "gcp_dev_project_id=${{ secrets.GCP_DEV_PROJECT_ID }}" \
+            -var "gcp_demo_project_id=${{ secrets.GCP_DEMO_PROJECT_ID }}" \
+            -var "db_name=${{ secrets.DB_NAME }}" \
+            -var "db_username=${{ secrets.DB_USERNAME }}" \
+            -var "db_password=${{ secrets.DB_PASSWORD }}" \
+            -var "github_workspace=${{ github.workspace }}" \
+            -var "aws_region=${{ env.AWS_REGION }}" \
+            -var "gcp_zone=${{ env.GCP_ZONE }}" .

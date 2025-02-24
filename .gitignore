@@ -36,3 +36,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Packer ###
+packer_cache/
+crash.log
+*.pkrvars.hcl
+*.box
