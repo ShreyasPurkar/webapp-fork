@@ -4,10 +4,6 @@ on:
   push:
     branches: 
      - main
-    paths:
-      - '*.pkr.hcl'
-      - 'src/**'
-      - 'pom.xml'
 
 env: 
   PKR_VERSION: "1.8.5" 
@@ -80,28 +76,32 @@ jobs:
           "
 
       # Step 6: Build and run tests
-      - name: Build and Run Tests
-        run: mvn clean install
-     
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v3
+      - name: Build and Zip Application
+        run: |
+          mvn clean package
+          cd target
+          zip -r webapp.zip webapp-0.0.1-SNAPSHOT.jar
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: webapp-0.0.1-SNAPSHOT
-          path: target/webapp-0.0.1-SNAPSHOT.jar
-  
+          name: webapp-zip
+          path: target/webapp.zip    
+       
   build-image:
     needs: integration-tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
         with:
-          name: webapp-0.0.1-SNAPSHOT
-          path: packer/
+          name: webapp-zip
+          path: target        
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -111,12 +111,13 @@ jobs:
           aws-region: us-east-1
 
       - name: Configure GCP credentials
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{secrets.GCP_DEV_PROJECT_ID}}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1    
+      # - name: Set up Cloud SDK
+      #   uses: google-github-actions/setup-gcloud@v1    
       
       - name: Setup Packer
         uses: hashicorp/setup-packer@v2
@@ -126,22 +127,19 @@ jobs:
       - name: Initialize Packer Template
         run: |
           cd packer
-          packer init .
-          
-      - name: Create Variables File
-        run: |
-          cat << EOF > packer/variables.pkrvars.hcl
-          aws_demo_account_id        = "${{ secrets.AWS_DEMO_ACCOUNT_ID }}"
-          gcp_dev_project_id         = "${{ secrets.GCP_DEV_PROJECT_ID }}"
-          gcp_demo_project_id        = "${{ secrets.GCP_DEMO_PROJECT_ID }}"
-          db_name                    = "${{ secrets.DB_NAME }}"
-          db_username                = "${{ secrets.DB_USERNAME }}"
-          db_password                = "${{ secrets.DB_PASSWORD }}"
-          EOF          
+          packer init .      
       
       - name: Build Image
         run: |
           cd packer
-          packer build -color=false -on-error=abort -var-file=variables.pkrvars.hcl webapp.pkr.hcl
+          packer build -color=false -on-error=abort \
+            -var "aws_demo_account_id=${{ secrets.AWS_DEMO_ACCOUNT_ID }}" \
+            -var "gcp_dev_project_id=${{ secrets.GCP_DEV_PROJECT_ID }}" \
+            -var "gcp_demo_project_id=${{ secrets.GCP_DEMO_PROJECT_ID }}" \
+            -var "db_name=${{ secrets.DB_NAME }}" \
+            -var "db_username=${{ secrets.DB_USERNAME }}" \
+            -var "db_password=${{ secrets.DB_PASSWORD }}" \
+            -var "github_workspace=${{ github.workspace }}" \
+            webapp.pkr.hcl
         env:
           PACKER_LOG: 1

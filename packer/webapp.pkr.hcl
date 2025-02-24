@@ -19,7 +19,7 @@ variable "aws_region" {
 
 variable "aws_instance_type" {
   type        = string
-  default     = "t2.medium"
+  default     = "t2.micro"
   description = "The EC2 instance type"
 }
 
@@ -82,7 +82,7 @@ variable "gcp_zone" {
 
 variable "gcp_machine_type" {
   type        = string
-  default     = "e2-medium"
+  default     = "e2-micro"
   description = "The GCE machine type"
 }
 
@@ -105,32 +105,39 @@ variable "ssh_username" {
 }
 
 variable "db_name" {
-  type = string
+  type        = string
   sensitive   = true
   description = "The name of the database"
 }
 
 variable "db_username" {
-  type = string
+  type        = string
   sensitive   = true
   description = "The username of the database"
 }
 
 variable "db_password" {
-  type = string
+  type        = string
   sensitive   = true
   description = "The password of the database"
 }
 
+variable "github_workspace" {
+  type        = string
+  description = "The GitHub workspace directory"
+}
+
 source "amazon-ebs" "webapp" {
-  ami_name        = "webapp-custom-image-{{timestamp}}"
-  ami_description = "Custom image for webapp with Java and PostgreSQL"
-  instance_type   = var.aws_instance_type
-  region          = var.aws_region
-  ssh_username    = var.ssh_username
-  ssh_timeout     = "30m"
-  ami_users       = []
-  encrypt_boot    = true
+  ami_name                = "webapp-custom-image-{{timestamp}}"
+  ami_description         = "Custom image for webapp with Java and PostgreSQL"
+  instance_type           = var.aws_instance_type
+  region                  = var.aws_region
+  ssh_username            = var.ssh_username
+  ssh_timeout             = "30m"
+  ssh_handshake_attempts  = "20"
+  pause_before_connecting = "10s"
+  ami_users               = []
+  encrypt_boot            = true
 
   source_ami_filter {
     filters = {
@@ -178,33 +185,17 @@ build {
     "source.googlecompute.webapp",
   ]
 
-  provisioner "shell" {
-    script = "./updateOs.sh"
-  }
-
-  provisioner "shell" {
-    environment_vars = [
-      "DB_NAME=${var.db_name}",
-      "DB_USERNAME=${var.db_username}",
-      "DB_PASSWORD=${var.db_password}"
-    ]
-    script = "./setupDatabase.sh"
-  }
-
   provisioner "file" {
     source      = "./webapp.service"
     destination = "/tmp/webapp.service"
   }
 
   provisioner "file" {
-    pause_before = "30s"
-    source       = "./webapp-0.0.1-SNAPSHOT.jar"
-    destination  = "/tmp/webapp-0.0.1-SNAPSHOT.jar"
-    max_retries  = 5
-  }
-
-  provisioner "shell" {
-    script = "./appDirSetup.sh"
+    pause_before = "15s"
+    source       = "${var.github_workspace}/target/webapp.zip"
+    destination  = "/tmp/webapp.zip"
+    max_retries  = 3
+    timeout      = "30m"
   }
 
   provisioner "shell" {
@@ -213,6 +204,11 @@ build {
       "DB_USERNAME=${var.db_username}",
       "DB_PASSWORD=${var.db_password}"
     ]
-    script = "./setupWebapp.sh"
+    scripts = [
+      "./updateOs.sh",
+      "./setupDatabase.sh",
+      "./appDirSetup.sh",
+      "./setupWebapp.sh"
+    ]
   }
 }
