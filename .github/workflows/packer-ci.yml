@@ -7,7 +7,9 @@ on:
     types: [opened, synchronize, reopened]  
 
 env: 
-  PKR_VERSION: "1.8.5"       
+  PKR_VERSION: "1.8.5"    
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  GCP_ZONE: ${{ vars.GCP_ZONE }}   
 
 jobs:
   validate:
@@ -48,4 +50,6 @@ jobs:
             -var "db_name=${{ secrets.DB_NAME }}" \
             -var "db_username=${{ secrets.DB_USERNAME }}" \
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
-            -var "github_workspace=${{ github.workspace }}" .
+            -var "github_workspace=${{ github.workspace }}" \
+            -var "aws_region=${{ env.AWS_REGION }}" \
+            -var "gcp_zone=${{ env.GCP_ZONE }}" .
