@@ -151,7 +151,7 @@ jobs:
 
       - name: Share image with GCP DEMO project
         run: |
-            IMAGE_NAME=$(gcloud compute images list --filter="name~'custom-node-mysql-*'" --format="value(name)" | head -n1)
+            IMAGE_NAME=$(gcloud compute images list --filter="name~'webapp-custom-image-*'" --format="value(name)" | head -n1)
 
             gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
             echo "Sharing image: $IMAGE_NAME"
