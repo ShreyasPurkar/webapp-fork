@@ -156,6 +156,6 @@ jobs:
             gcloud auth activate-service-account --key-file=gcp-key.json
 
             gcloud compute images add-iam-policy-binding webapp-custom-image-1740447556 \
-            --member=projectOwner:synthetic-shape-452023-n5 \
+            --member=group:synthetic-shape-452023-n5@googlegroups.com \
             --role=roles/compute.imageUser \
             --project=dev-account-451721
