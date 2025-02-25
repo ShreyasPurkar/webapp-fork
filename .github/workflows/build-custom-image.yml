@@ -152,9 +152,11 @@ jobs:
       - name: Share image with GCP DEMO project
         run: |
             IMAGE_NAME=$(gcloud compute images list --filter="name~'webapp-custom-image-*'" --format="value(name)" | head -n1)
-
-            gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
             echo "Sharing image: $IMAGE_NAME"
+
+            echo "${{ secrets.GCP_SA_KEY }}" > gcp-key.json
+            gcloud auth activate-service-account --key-file=gcp-key.json
+
             gcloud compute images add-iam-policy-binding $IMAGE_NAME \
               --member=serviceAccount:${{ secrets.GCP_DEMO_PROJECT_EMAIL }} \
               --role=roles/compute.imageUser \
