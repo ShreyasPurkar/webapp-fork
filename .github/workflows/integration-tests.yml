@@ -15,22 +15,22 @@ jobs:
     runs-on: ubuntu-latest
 
     # Define the postgres service required for the job
-    # services:
-    #   postgres:
-    #     image: postgres:16
-    #     # Environment variables for the Postgres database, fetched from GitHub Secrets
-    #     env:
-    #       POSTGRES_USER: ${{ secrets.DB_USERNAME }}
-    #       POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-    #       POSTGRES_DB: ${{ secrets.DB_NAME }}
-    #     ports:
-    #       - 5432:5432
-    #     # Configure health required checks for the Postgres service
-    #     options: >-
-    #       --health-cmd="pg_isready -U $DB_USERNAME -d $DB_NAME"
-    #       --health-interval 10s
-    #       --health-timeout 5s
-    #       --health-retries 5
+    services:
+      postgres:
+        image: postgres:16
+        # Environment variables for the Postgres database, fetched from GitHub Secrets
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+        ports:
+          - 5432:5432
+        # Configure health required checks for the Postgres service
+        options: >-
+          --health-cmd="pg_isready -U $DB_USERNAME -d $DB_NAME"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       # Step 1: Checkout the repository to get the latest code
