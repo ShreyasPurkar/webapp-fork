@@ -32,10 +32,10 @@ jobs:
     #       --health-timeout 5s
     #       --health-retries 5
 
-    # steps:
-    #   # Step 1: Checkout the repository to get the latest code
-    #   - name: Checkout Repository
-    #     uses: actions/checkout@v4
+    steps:
+      # Step 1: Checkout the repository to get the latest code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
     #   # Step 2: Set up Java 19
     #   - name: Set Up Java v19
