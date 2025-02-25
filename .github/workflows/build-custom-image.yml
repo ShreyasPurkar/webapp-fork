@@ -155,7 +155,7 @@ jobs:
             echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
             gcloud auth activate-service-account --key-file=gcp-key.json
 
-            gcloud compute images add-iam-policy-binding $IMAGE_NAME \
-              --member=serviceAccount:${{ secrets.GCP_DEMO_PROJECT_EMAIL }} \
-              --role="roles/compute.imageUser" \
-              --project=${{ secrets.GCP_DEV_PROJECT_ID }}
+            gcloud compute images add-iam-policy-binding webapp-custom-image-1740447556 \
+            --member=projectOwner:synthetic-shape-452023-n5 \
+            --role=roles/compute.imageUser \
+            --project=dev-account-451721
