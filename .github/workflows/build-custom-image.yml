@@ -92,6 +92,7 @@ jobs:
           path: target/webapp.zip    
        
   build-image:
+    name: Build Custom Image
     needs: integration-tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -132,22 +133,22 @@ jobs:
           cd packer
           packer init .      
       
-      - name: Build Image
-        run: |
-          cd packer
-          packer build -color=false -on-error=abort \
-            -var "aws_demo_account_id=${{ secrets.AWS_DEMO_ACCOUNT_ID }}" \
-            -var "gcp_dev_project_id=${{ secrets.GCP_DEV_PROJECT_ID }}" \
-            -var "gcp_demo_project_id=${{ secrets.GCP_DEMO_PROJECT_ID }}" \
-            -var "db_name=${{ secrets.DB_NAME }}" \
-            -var "db_username=${{ secrets.DB_USERNAME }}" \
-            -var "db_password=${{ secrets.DB_PASSWORD }}" \
-            -var "github_workspace=${{ github.workspace }}" \
-            -var "aws_region=${{ env.AWS_REGION }}" \
-            -var "gcp_zone=${{ env.GCP_ZONE }}" \
-            webapp.pkr.hcl
-        env:
-          PACKER_LOG: 1
+      # - name: Build Image
+      #   run: |
+      #     cd packer
+      #     packer build -color=false -on-error=abort \
+      #       -var "aws_demo_account_id=${{ secrets.AWS_DEMO_ACCOUNT_ID }}" \
+      #       -var "gcp_dev_project_id=${{ secrets.GCP_DEV_PROJECT_ID }}" \
+      #       -var "gcp_demo_project_id=${{ secrets.GCP_DEMO_PROJECT_ID }}" \
+      #       -var "db_name=${{ secrets.DB_NAME }}" \
+      #       -var "db_username=${{ secrets.DB_USERNAME }}" \
+      #       -var "db_password=${{ secrets.DB_PASSWORD }}" \
+      #       -var "github_workspace=${{ github.workspace }}" \
+      #       -var "aws_region=${{ env.AWS_REGION }}" \
+      #       -var "gcp_zone=${{ env.GCP_ZONE }}" \
+      #       webapp.pkr.hcl
+      #   env:
+      #     PACKER_LOG: 1
 
       - name: Share image with GCP DEMO project
         run: |
