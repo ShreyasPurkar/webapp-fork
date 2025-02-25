@@ -1,9 +1,9 @@
 name: Build Custom Image
 
 on:
-  push:
-    branches: 
-     - main
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 env: 
   PKR_VERSION: "1.8.5" 
@@ -16,6 +16,7 @@ jobs:
   integration-tests:
     name: Run Integration Tests
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
 
     # Define the postgres service required for the job
     services:
@@ -145,19 +146,16 @@ jobs:
             -var "aws_region=${{ env.AWS_REGION }}" \
             -var "gcp_zone=${{ env.GCP_ZONE }}" \
             webapp.pkr.hcl
-
-          IMAGE_NAME=$(packer output -json | jq -r '.[0].built[0].image_name')
-          echo "Generated Image Name: $IMAGE_NAME"
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV  
         env:
           PACKER_LOG: 1
 
       - name: Share image with GCP DEMO project
         run: |
+            IMAGE_NAME=$(gcloud compute images list --filter="name~'custom-node-mysql-*'" --format="value(name)" | head -n1)
+
             gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
             echo "Sharing image: $IMAGE_NAME"
             gcloud compute images add-iam-policy-binding $IMAGE_NAME \
               --member=serviceAccount:${{ secrets.GCP_DEMO_PROJECT_EMAIL }} \
               --role=roles/compute.imageUser \
               --project=${{ secrets.GCP_DEMO_PROJECT_ID }}
-        
