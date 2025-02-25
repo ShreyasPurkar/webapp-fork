@@ -2,7 +2,7 @@ name: Build Custom Image
 
 on:
   pull_request:
-    types: [closed]
+    # types: [closed]
     branches: [main]
 
 env: 
