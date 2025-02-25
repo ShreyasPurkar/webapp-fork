@@ -160,6 +160,6 @@ jobs:
             --role=roles/compute.imageUser \
             --project=${{ secrets.GCP_DEV_PROJECT_ID }}
 
-            gcloud compute images add-project-access $IMAGE_NAME \
+            gcloud compute images create-share $IMAGE_NAME \
             --project=${{ secrets.GCP_DEV_PROJECT_ID }} \
-            --project-access=${{ secrets.GCP_DEMO_PROJECT_ID }} 
+            --destination-project=${{ secrets.GCP_DEMO_PROJECT_ID }} 
