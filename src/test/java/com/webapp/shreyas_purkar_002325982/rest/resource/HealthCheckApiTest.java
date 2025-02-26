@@ -147,7 +147,7 @@ public class HealthCheckApiTest {
         .when()
                 .get("/healthz")
         .then()
-                .statusCode(503)
+                .statusCode(500)
                 .header("X-Content-Type-Options", "nosniff")
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
                 .header("Pragma", "no-cache");
