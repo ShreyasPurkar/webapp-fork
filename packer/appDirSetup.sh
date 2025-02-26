@@ -10,8 +10,8 @@ log() {
 
 # Create a non-login user and group for the application
 log "Creating user and group csye6225..."
-sudo groupadd --system csye6225 || true
-sudo useradd --system --no-create-home --shell /usr/sbin/nologin --gid csye6225 csye6225 || true
+sudo groupadd csye6225
+sudo useradd --no-create-home --shell /usr/sbin/nologin --gid csye6225 csye6225
 
 # Create application directory
 log "Creating application directory..."
@@ -30,4 +30,3 @@ sudo chmod 750 /etc/systemd/system/webapp.service
 log "Moving JAR file to application directory..."
 sudo chown ubuntu:ubuntu /opt/csye6225/webapp
 unzip -o /tmp/webapp.zip -d /opt/csye6225/webapp
-# sudo cp /tmp/webapp-0.0.1-SNAPSHOT.jar /opt/csye6225/webapp/webapp-0.0.1-SNAPSHOT.jar

@@ -37,47 +37,47 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-    #   # Step 2: Set up Java 19
-    #   - name: Set Up Java v19
-    #     uses: actions/setup-java@v3
-    #     with:
-    #       distribution: 'temurin'
-    #       java-version: '19'
-    #       cache: 'maven'
+      # Step 2: Set up Java 19
+      - name: Set Up Java v19
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '19'
+          cache: 'maven'
 
-    #   # Step 3: Set environment variables required for database connection
-    #   - name: Set Environment Variables
-    #     run: |
-    #       echo "DB_HOST=localhost" >> $GITHUB_ENV
-    #       echo "DB_PORT=5432" >> $GITHUB_ENV
-    #       echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
-    #       echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
-    #       echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+      # Step 3: Set environment variables required for database connection
+      - name: Set Environment Variables
+        run: |
+          echo "DB_HOST=localhost" >> $GITHUB_ENV
+          echo "DB_PORT=5432" >> $GITHUB_ENV
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
 
-    #   # Step 4: Verify that the database is accessible
-    #   - name: Verify Database Connection
-    #     run: |
-    #       sudo apt-get install -y postgresql-client
-    #       PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "SELECT 1;"
+      # Step 4: Verify that the database is accessible
+      - name: Verify Database Connection
+        run: |
+          sudo apt-get install -y postgresql-client
+          PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "SELECT 1;"
 
-    #   # Step 5: Create the test schema if it does not exist
-    #   - name: Create Schema if Not Exists
-    #     run: |
-    #       sudo apt-get install -y postgresql-client
-    #       PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "
-    #       DO \$\$
-    #       BEGIN
-    #         IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = 'test') THEN
-    #           CREATE SCHEMA test;
-    #         END IF;
-    #       END;
-    #       \$\$
-    #       "
+      # Step 5: Create the test schema if it does not exist
+      - name: Create Schema if Not Exists
+        run: |
+          sudo apt-get install -y postgresql-client
+          PGPASSWORD=${{ env.DB_PASSWORD }} psql -h ${{ env.DB_HOST }} -U ${{ env.DB_USERNAME }} -d ${{ env.DB_NAME }} -c "
+          DO \$\$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = 'test') THEN
+              CREATE SCHEMA test;
+            END IF;
+          END;
+          \$\$
+          "
 
-    #   # Step 6: Clear maven caches
-    #   - name: Clear Maven Cache
-    #     run: mvn dependency:purge-local-repository
+      # Step 6: Clear maven caches
+      - name: Clear Maven Cache
+        run: mvn dependency:purge-local-repository
 
-    #   # Step 7: Build and run tests
-    #   - name: Build and Run Tests
-    #     run: mvn clean install
+      # Step 7: Build and run tests
+      - name: Build and Run Tests
+        run: mvn clean install
