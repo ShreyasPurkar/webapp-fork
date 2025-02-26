@@ -122,10 +122,10 @@ variable "db_password" {
   description = "The password of the database"
 }
 
-# variable "github_workspace" {
-#   type        = string
-#   description = "The GitHub workspace directory"
-# }
+variable "github_workspace" {
+  type        = string
+  description = "The GitHub workspace directory"
+}
 
 source "amazon-ebs" "webapp" {
   ami_name                = "webapp-custom-image-{{timestamp}}"
