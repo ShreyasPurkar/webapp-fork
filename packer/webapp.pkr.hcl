@@ -2,7 +2,7 @@ packer {
   required_plugins {
     amazon = {
       version = ">= 1.0.0, < 2.0.0"
-        source  = "github.com/hashicorp/amazon"
+      source  = "github.com/hashicorp/amazon"
     }
     googlecompute = {
       version = ">= 1.0.0, < 2.0.0"
@@ -122,10 +122,10 @@ variable "db_password" {
   description = "The password of the database"
 }
 
-variable "github_workspace" {
-  type        = string
-  description = "The GitHub workspace directory"
-}
+# variable "github_workspace" {
+#   type        = string
+#   description = "The GitHub workspace directory"
+# }
 
 source "amazon-ebs" "webapp" {
   ami_name                = "webapp-custom-image-{{timestamp}}"
