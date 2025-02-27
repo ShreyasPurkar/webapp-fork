@@ -178,7 +178,7 @@ jobs:
   
       # Step 10: Create the image in the target GCP project      
       - name: Create Image in target GCP Project  
-        run: |     
+        run: |
             gcloud compute images create $IMAGE_NAME \     
             --source-image=$IMAGE_NAME \     
             --source-image-project=${{ secrets.GCP_DEV_PROJECT_ID }} \     
