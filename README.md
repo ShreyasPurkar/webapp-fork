@@ -1,4 +1,4 @@
-# webapp  
+# webapp
 
 ## Description
 A health check API to monitor the health of the application instance.

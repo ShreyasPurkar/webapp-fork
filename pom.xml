@@ -32,6 +32,7 @@
     <properties>
         <java.version>17</java.version>
         <rest-assured-version>5.2.0</rest-assured-version>
+        <aws-java-sdk-s3-version>2.25.29</aws-java-sdk-s3-version>
     </properties>
 
     <dependencies>
@@ -52,10 +53,28 @@
             <scope>runtime</scope>
         </dependency>
 
+    <!-- AWS SDK for S3 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws-java-sdk-s3-version}</version>
+        </dependency>
+
+    <!-- Jackson for JSON handling -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
     <!--Other dependencies-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
 

@@ -8,6 +8,10 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
+log "Installing PostgreSQL..."
+# Install PostgreSQL
+sudo apt install -y postgresql-16 postgresql-contrib-16
+
 # Configure PostgreSQL
 log "Configuring PostgreSQL..."
 sudo systemctl start postgresql

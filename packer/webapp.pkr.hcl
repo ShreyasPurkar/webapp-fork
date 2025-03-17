@@ -127,6 +127,7 @@ variable "github_workspace" {
   description = "The GitHub workspace directory"
 }
 
+# Build the custom AMI for the webapp on AWS
 source "amazon-ebs" "webapp" {
   ami_name                = "webapp-custom-image-{{timestamp}}"
   ami_description         = "Custom image for webapp with Java and PostgreSQL"
@@ -162,6 +163,7 @@ source "amazon-ebs" "webapp" {
 
 }
 
+# Build the custom image for the webapp on GCP
 source "googlecompute" "webapp" {
   image_name              = "webapp-custom-image-{{timestamp}}"
   image_description       = "Custom image for webapp with Java and PostgreSQL"
@@ -176,11 +178,40 @@ source "googlecompute" "webapp" {
   image_storage_locations = ["us"]
 }
 
+# Provision the custom AMI for the webapp on AWS
 build {
   name = "webapp-custom-ami-build"
 
   sources = [
-    "source.amazon-ebs.webapp",
+    "source.amazon-ebs.webapp"
+  ]
+
+  provisioner "file" {
+    source      = "./webapp.service"
+    destination = "/tmp/webapp.service"
+  }
+
+  provisioner "file" {
+    pause_before = "15s"
+    source       = "${var.github_workspace}/target/webapp.zip"
+    destination  = "/tmp/webapp.zip"
+    max_retries  = 3
+    timeout      = "30m"
+  }
+
+  provisioner "shell" {
+    scripts = [
+      "./updateOs.sh",
+      "./appDirSetup.sh"
+    ]
+  }
+}
+
+# Provision the custom image for the webapp on GCP
+build {
+  name = "webapp-custom-ami-build"
+
+  sources = [
     "source.googlecompute.webapp",
   ]
 

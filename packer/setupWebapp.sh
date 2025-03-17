@@ -23,9 +23,9 @@ EOT
 sudo systemctl daemon-reload
 sudo systemctl enable webapp.service
 
-# Set proper permissions
-log "Setting proper permissions..."
-sudo chown -R csye6225:csye6225 /opt/csye6225
-sudo chmod -R 750 /opt/csye6225
+# Set proper permissions for application.properties
+log "Setting proper permissions for application.properties..."
+sudo chown csye6225:csye6225 /opt/csye6225/webapp/application.properties
+sudo chmod 600 /opt/csye6225/webapp/application.properties
 
 log "Setup complete!"

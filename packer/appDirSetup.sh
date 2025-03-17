@@ -30,3 +30,8 @@ sudo chmod 750 /etc/systemd/system/webapp.service
 log "Moving JAR file to application directory..."
 sudo chown ubuntu:ubuntu /opt/csye6225/webapp
 unzip -o /tmp/webapp.zip -d /opt/csye6225/webapp
+
+# Set proper permissions
+log "Setting proper permissions..."
+sudo chown -R csye6225:csye6225 /opt/csye6225
+sudo chmod -R 750 /opt/csye6225
