@@ -28,4 +28,10 @@ public class S3ObjectEntity {
 
     @Column(name = "upload_date", nullable = false)
     private Instant uploadDate;
+
+    @Column(name = "content_length", nullable = false)
+    private Long contentLength;
+
+    @Column(name = "content_type", nullable = false)
+    private String contentType;
 }

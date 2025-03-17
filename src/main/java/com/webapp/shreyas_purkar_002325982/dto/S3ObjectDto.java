@@ -13,4 +13,6 @@ public class S3ObjectDto {
     private String objectId;
     private String url;
     private Instant uploadDate;
+    private String contentType;
+    private Long contentLength;
 }

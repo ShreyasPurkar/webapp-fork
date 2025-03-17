@@ -18,9 +18,7 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -52,13 +50,8 @@ public class S3ServiceImpl implements S3Service {
 
     public S3ServiceImpl(S3ObjectMetadataRepository repository, @Value("${aws.s3.region}") String region) {
         this.repository = repository;
-//        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(
-//                "AKIARZ5BNEVFNOPBBHCW",
-//                "uAxgRai+4Jxj7XlQcZHRDRHMhlwd7cPU+cpXEqbq"
-//        );
         this.s3Client = S3Client.builder()
                 .region(Region.of(region))
-//                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
     }
@@ -81,6 +74,8 @@ public class S3ServiceImpl implements S3Service {
         dto.setUrl(entity.get().getUrl());
         dto.setObjectId(entity.get().getObjectId());
         dto.setUploadDate(entity.get().getUploadDate());
+        dto.setContentType(entity.get().getContentType());
+        dto.setContentLength(entity.get().getContentLength());
 
         log.info("Retrieved S3 object successfully");
         return dto;
@@ -126,6 +121,8 @@ public class S3ServiceImpl implements S3Service {
         entity.setUrl(url);
         entity.setFileName(file.getOriginalFilename());
         entity.setUploadDate(Instant.now());
+        entity.setContentLength(file.getSize());
+        entity.setContentType(file.getContentType());
 
         try {
             repository.save(entity);
@@ -145,6 +142,8 @@ public class S3ServiceImpl implements S3Service {
         dto.setUrl(entity.getUrl());
         dto.setObjectId(entity.getObjectId());
         dto.setUploadDate(entity.getUploadDate());
+        dto.setContentType(entity.getContentType());
+        dto.setContentLength(entity.getContentLength());
 
         return dto;
     }
