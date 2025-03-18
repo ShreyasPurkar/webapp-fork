@@ -4,10 +4,6 @@ packer {
       version = ">= 1.0.0, < 2.0.0"
       source  = "github.com/hashicorp/amazon"
     }
-    googlecompute = {
-      version = ">= 1.0.0, < 2.0.0"
-      source  = "github.com/hashicorp/googlecompute"
-    }
   }
 }
 
@@ -44,58 +40,6 @@ variable "aws_volume_type" {
   type        = string
   default     = "gp2"
   description = "The EBS volume type"
-}
-
-variable "gcp_source_image" {
-  type        = string
-  default     = "ubuntu-2404-noble-amd64-v20250214"
-  description = "The source image for the GCE instance"
-}
-
-variable "gcp_source_image_family" {
-  type        = string
-  default     = "ubuntu-2404-lts-noble"
-  description = "The source image family for the GCE instance"
-}
-
-variable "gcp_source_image_project_id" {
-  type        = list(string)
-  default     = ["ubuntu-os-cloud"]
-  description = "The source image project ID for the GCE instance"
-}
-
-variable "gcp_dev_project_id" {
-  type        = string
-  description = "The GCP project ID where the GCE instance will be launched"
-}
-
-variable "gcp_demo_project_id" {
-  type        = string
-  description = "The GCP demo project ID"
-}
-
-variable "gcp_zone" {
-  type        = string
-  default     = "us-central1-a"
-  description = "The GCE zone where the GCE instance will be launched"
-}
-
-variable "gcp_machine_type" {
-  type        = string
-  default     = "e2-micro"
-  description = "The GCE machine type"
-}
-
-variable "gcp_disk_size" {
-  type        = number
-  default     = 20
-  description = "The GCE disk size in GB"
-}
-
-variable "gcp_disk_type" {
-  type        = string
-  default     = "pd-standard"
-  description = "The GCE disk type"
 }
 
 variable "ssh_username" {
@@ -160,22 +104,6 @@ source "amazon-ebs" "webapp" {
     volume_size           = var.aws_volume_size
     volume_type           = var.aws_volume_type
   }
-
-}
-
-# Build the custom image for the webapp on GCP
-source "googlecompute" "webapp" {
-  image_name              = "webapp-custom-image-{{timestamp}}"
-  image_description       = "Custom image for webapp with Java and PostgreSQL"
-  project_id              = var.gcp_dev_project_id
-  source_image            = var.gcp_source_image
-  source_image_family     = var.gcp_source_image_family
-  disk_size               = var.gcp_disk_size
-  disk_type               = var.gcp_disk_type
-  machine_type            = var.gcp_machine_type
-  zone                    = var.gcp_zone
-  ssh_username            = var.ssh_username
-  image_storage_locations = ["us"]
 }
 
 # Provision the custom AMI for the webapp on AWS
@@ -203,42 +131,6 @@ build {
     scripts = [
       "./updateOs.sh",
       "./appDirSetup.sh"
-    ]
-  }
-}
-
-# Provision the custom image for the webapp on GCP
-build {
-  name = "webapp-custom-ami-build"
-
-  sources = [
-    "source.googlecompute.webapp",
-  ]
-
-  provisioner "file" {
-    source      = "./webapp.service"
-    destination = "/tmp/webapp.service"
-  }
-
-  provisioner "file" {
-    pause_before = "15s"
-    source       = "${var.github_workspace}/target/webapp.zip"
-    destination  = "/tmp/webapp.zip"
-    max_retries  = 3
-    timeout      = "30m"
-  }
-
-  provisioner "shell" {
-    environment_vars = [
-      "DB_NAME=${var.db_name}",
-      "DB_USERNAME=${var.db_username}",
-      "DB_PASSWORD=${var.db_password}"
-    ]
-    scripts = [
-      "./updateOs.sh",
-      "./setupDatabase.sh",
-      "./appDirSetup.sh",
-      "./setupWebapp.sh"
     ]
   }
 }

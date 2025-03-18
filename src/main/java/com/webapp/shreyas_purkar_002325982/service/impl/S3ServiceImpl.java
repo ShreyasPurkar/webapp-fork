@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -116,6 +118,8 @@ public class S3ServiceImpl implements S3Service {
 
         String url = uploadObjectToS3(file, fileId);
 
+        Map<String, Object> metadata = getObjectMetadata(url);
+
         S3ObjectEntity entity = new S3ObjectEntity();
         entity.setObjectId(fileId.toString());
         entity.setUrl(url);
@@ -123,6 +127,10 @@ public class S3ServiceImpl implements S3Service {
         entity.setUploadDate(Instant.now());
         entity.setContentLength(file.getSize());
         entity.setContentType(file.getContentType());
+        entity.setEtag(metadata.get("ETag").toString());
+        entity.setAcceptRanges(metadata.get("AcceptRanges").toString());
+        entity.setServerSideEncryption(metadata.get("ServerSideEncryption").toString());
+        entity.setLastModified(metadata.get("LastModified").toString());
 
         try {
             repository.save(entity);
@@ -149,6 +157,44 @@ public class S3ServiceImpl implements S3Service {
     }
 
     /**
+     * Method to get S3 object system metadata
+     *
+     * @param url of object in S3
+     * @return metadata
+     */
+    private Map<String, Object> getObjectMetadata(String url) {
+        log.info("Getting object metadata...");
+
+        HeadObjectResponse response;
+
+        String key = url.substring(url.indexOf("/") + 1);
+
+        HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        try {
+            response = s3Client.headObject(headObjectRequest);
+        } catch (Exception e) {
+            log.error("Failed to upload the file on S3");
+            throw new FileUploadException("Failed to upload the file on S3");
+        }
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("AcceptRanges", response.acceptRanges());
+        metadata.put("LastModified", response.lastModified());
+        metadata.put("ContentLength", response.contentLength());
+        metadata.put("ETag", response.eTag());
+        metadata.put("ContentType", response.contentType());
+        metadata.put("ServerSideEncryption", response.serverSideEncryptionAsString());
+
+        log.info("Retrieved Metadata: {}", metadata);
+
+        return metadata;
+    }
+
+    /**
      * Method to upload S3 object
      *
      * @param file to be uploaded
@@ -157,21 +203,16 @@ public class S3ServiceImpl implements S3Service {
     private String uploadObjectToS3(MultipartFile file, UUID fileId) {
         String key = fileId + "/" + file.getOriginalFilename();
 
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("Content-Type", file.getContentType());
-        metadata.put("Content-Length", String.valueOf(file.getSize()));
-
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                                                             .bucket(bucketName)
                                                             .key(key)
-                                                            .metadata(metadata)
                                                             .build();
 
         try {
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
         } catch (IOException e) {
             log.error("Failed to upload the file on S3 with id {}", fileId);
-            throw new FileUploadException("Failed to upload the S3 object metadata");
+            throw new FileUploadException("Failed to upload the file on S3 with id " + fileId);
         }
 
         log.info("S3 object uploaded successfully");

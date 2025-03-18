@@ -29,9 +29,21 @@ public class S3ObjectEntity {
     @Column(name = "upload_date", nullable = false)
     private Instant uploadDate;
 
-    @Column(name = "content_length", nullable = false)
+    @Column(name = "ContentLength", nullable = false)
     private Long contentLength;
 
-    @Column(name = "content_type", nullable = false)
+    @Column(name = "ContentType", nullable = false)
     private String contentType;
+
+    @Column(name = "ETag")
+    private String etag;
+
+    @Column(name = "AcceptRanges")
+    private String acceptRanges;
+
+    @Column(name = "ServerSideEncryption")
+    private String serverSideEncryption;
+
+    @Column(name = "LastModified")
+    private String lastModified;
 }

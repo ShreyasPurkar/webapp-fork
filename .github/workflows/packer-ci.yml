@@ -10,7 +10,6 @@ on:
 env: 
   PKR_VERSION: "1.8.5"    
   AWS_REGION: ${{ vars.AWS_REGION }}
-  GCP_ZONE: ${{ vars.GCP_ZONE }}   
 
 jobs:
   # Job to validate Packer templates
@@ -54,11 +53,8 @@ jobs:
           cd packer
           packer validate \
             -var "aws_demo_account_id=${{ secrets.AWS_DEMO_ACCOUNT_ID }}" \
-            -var "gcp_dev_project_id=${{ secrets.GCP_DEV_PROJECT_ID }}" \
-            -var "gcp_demo_project_id=${{ secrets.GCP_DEMO_PROJECT_ID }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
             -var "db_username=${{ secrets.DB_USERNAME }}" \
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
             -var "github_workspace=${{ github.workspace }}" \
-            -var "aws_region=${{ env.AWS_REGION }}" \
-            -var "gcp_zone=${{ env.GCP_ZONE }}" .
+            -var "aws_region=${{ env.AWS_REGION }}" .
