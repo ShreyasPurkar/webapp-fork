@@ -19,11 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.core.sync.RequestBody;
 
@@ -98,7 +96,7 @@ public class S3ServiceImpl implements S3Service {
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
             log.error("Failed to retrieve the S3 object");
-            throw new DatabaseConnectionException("");
+            throw new DatabaseConnectionException("Failed to retrieve the S3 object");
         } catch (Exception ex) {
             log.error("Unexpected error occurred: {}", ex.getMessage());
             throw new DatabaseConnectionException("Failed to retrieve the S3 object");
@@ -118,7 +116,7 @@ public class S3ServiceImpl implements S3Service {
 
         String url = uploadObjectToS3(file, fileId);
 
-        Map<String, Object> metadata = getObjectMetadata(url);
+        Map<String, Object> metadata = getObjectMetadata(url, fileId.toString());
 
         S3ObjectEntity entity = new S3ObjectEntity();
         entity.setObjectId(fileId.toString());
@@ -131,6 +129,8 @@ public class S3ServiceImpl implements S3Service {
         entity.setAcceptRanges(metadata.get("AcceptRanges").toString());
         entity.setServerSideEncryption(metadata.get("ServerSideEncryption").toString());
         entity.setLastModified(metadata.get("LastModified").toString());
+        entity.setAwsRequestId(metadata.get("x-amz-request-id").toString());
+        entity.setExtendedRequestId(metadata.get("x-amz-id-2").toString());
 
         try {
             repository.save(entity);
@@ -138,9 +138,15 @@ public class S3ServiceImpl implements S3Service {
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
+            log.error("Deleting the S3 object with id " + fileId);
+            deleteS3Object(url.substring(url.indexOf("/") + 1), fileId.toString());
+
             log.error("Failed to persist the S3 object metadata");
             throw new DatabaseConnectionException("Failed to persist the S3 object metadata");
         } catch (Exception ex) {
+            log.error("Deleting the S3 object with id " + fileId);
+            deleteS3Object(url.substring(url.indexOf("/") + 1), fileId.toString());
+
             log.error("Unexpected error occurred: {}", ex.getMessage());
             throw new DatabaseConnectionException("Failed to persist the S3 object metadata");
         }
@@ -162,7 +168,7 @@ public class S3ServiceImpl implements S3Service {
      * @param url of object in S3
      * @return metadata
      */
-    private Map<String, Object> getObjectMetadata(String url) {
+    private Map<String, Object> getObjectMetadata(String url, String fileId) {
         log.info("Getting object metadata...");
 
         HeadObjectResponse response;
@@ -170,13 +176,22 @@ public class S3ServiceImpl implements S3Service {
         String key = url.substring(url.indexOf("/") + 1);
 
         HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
+                                                               .bucket(bucketName)
+                                                               .key(key)
+                                                               .build();
 
         try {
             response = s3Client.headObject(headObjectRequest);
+        } catch (SdkClientException e) {
+            log.error("Deleting the S3 object with id " + fileId);
+            deleteS3Object(key, fileId);
+
+            log.error("S3 is unavailable. Failed to fetch metadata for {}", key);
+            throw new DatabaseConnectionException("S3 service is down. Please try again later.");
         } catch (Exception e) {
+            log.error("Deleting the S3 object with id " + fileId);
+            deleteS3Object(key, fileId);
+
             log.error("Failed to upload the file on S3");
             throw new FileUploadException("Failed to upload the file on S3");
         }
@@ -188,6 +203,8 @@ public class S3ServiceImpl implements S3Service {
         metadata.put("ETag", response.eTag());
         metadata.put("ContentType", response.contentType());
         metadata.put("ServerSideEncryption", response.serverSideEncryptionAsString());
+        metadata.put("x-amz-request-id", response.responseMetadata().extendedRequestId());
+        metadata.put("x-amz-id-2", response.responseMetadata().requestId());
 
         log.info("Retrieved Metadata: {}", metadata);
 
@@ -213,6 +230,9 @@ public class S3ServiceImpl implements S3Service {
         } catch (IOException e) {
             log.error("Failed to upload the file on S3 with id {}", fileId);
             throw new FileUploadException("Failed to upload the file on S3 with id " + fileId);
+        } catch (SdkClientException e) {
+            log.error("S3 is unavailable. Upload failed for file ID: {}", fileId);
+            throw new DatabaseConnectionException("S3 service is currently unavailable. Please try again later.");
         }
 
         log.info("S3 object uploaded successfully");
@@ -226,13 +246,15 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public void deleteObject(String id) {
+        log.info("Deleting the S3 object with id {}...", id);
+
         Optional<S3ObjectEntity> entity = findS3Object(id);
 
         if (entity.isEmpty()) {
             throw new S3ObjectNotFoundException("Unable to find the object with id " + id);
         }
 
-        deleteS3Object(entity);
+        deleteS3Object(entity.get().getUrl().substring(bucketName.length() + 1), entity.get().getObjectId());
 
         try {
             repository.delete(entity.get());
@@ -250,14 +272,25 @@ public class S3ServiceImpl implements S3Service {
     /**
      * Method to delete S3 object
      *
-     * @param entity containing object metadata
+     * @param key containing object key
+     * @param objectId of S3 bucket
      */
-    private void deleteS3Object(Optional<S3ObjectEntity> entity) {
+    private void deleteS3Object(String key, String objectId) {
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                                                                      .bucket(bucketName)
-                                                                     .key(entity.get().getUrl().substring(bucketName.length() + 1))
+                                                                     .key(key)
                                                                      .build();
 
-        s3Client.deleteObject(deleteObjectRequest);
+        try {
+            s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(key).build());
+            s3Client.deleteObject(deleteObjectRequest);
+        } catch (SdkClientException e) {
+            log.error("S3 is down! Cannot delete file: {}", objectId);
+            throw new DatabaseConnectionException("S3 service is down. Please try again later.");
+        } catch (NoSuchKeyException  e) {
+            log.warn("S3 object already deleted or does not exist: {}", objectId);
+        } catch (Exception e) {
+            log.error("Unexpected issue while deleting S3 object: {}", objectId);
+        }
     }
 }
