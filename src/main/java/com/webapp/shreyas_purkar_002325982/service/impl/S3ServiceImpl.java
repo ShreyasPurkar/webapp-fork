@@ -129,6 +129,8 @@ public class S3ServiceImpl implements S3Service {
         entity.setAcceptRanges(metadata.get("AcceptRanges").toString());
         entity.setServerSideEncryption(metadata.get("ServerSideEncryption").toString());
         entity.setLastModified(metadata.get("LastModified").toString());
+        entity.setAwsRequestId(metadata.get("x-amz-request-id").toString());
+        entity.setExtendedRequestId(metadata.get("x-amz-id-2").toString());
 
         try {
             repository.save(entity);
@@ -201,6 +203,8 @@ public class S3ServiceImpl implements S3Service {
         metadata.put("ETag", response.eTag());
         metadata.put("ContentType", response.contentType());
         metadata.put("ServerSideEncryption", response.serverSideEncryptionAsString());
+        metadata.put("x-amz-request-id", response.responseMetadata().extendedRequestId());
+        metadata.put("x-amz-id-2", response.responseMetadata().requestId());
 
         log.info("Retrieved Metadata: {}", metadata);
 

@@ -46,4 +46,10 @@ public class S3ObjectEntity {
 
     @Column(name = "LastModified")
     private String lastModified;
+
+    @Column(name = "x-amz-id-2")
+    private String extendedRequestId;
+
+    @Column(name = "x-amz-request-id")
+    private String awsRequestId;
 }
