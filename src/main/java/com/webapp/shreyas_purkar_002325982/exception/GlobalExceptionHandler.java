@@ -26,11 +26,15 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DatabaseConnectionException.class)
     public ResponseEntity<Map<String, Object>> handleDatabaseConnectionException(DatabaseConnectionException ex) {
+        return getMapResponseEntityForServiceUnavailable(ex.getMessage());
+    }
+
+    private ResponseEntity<Map<String, Object>> getMapResponseEntityForServiceUnavailable(String message) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
         errorResponse.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
         errorResponse.put("error", HttpStatus.SERVICE_UNAVAILABLE.name());
-        errorResponse.put("message", ex.getMessage());
+        errorResponse.put("message", message);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
     }
 
@@ -160,5 +164,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FileUploadException.class)
     public ResponseEntity<Map<String, Object>> handleFileUploadException(FileUploadException ex) {
         return getMapResponseEntityForBadRequest(ex.getMessage());
+    }
+
+    /**
+     * Exception to handle file deletion failure
+     */
+    @ExceptionHandler
+    public ResponseEntity<Map<String, Object>> handleFileDeletionException(FileDeletionException ex) {
+        return getMapResponseEntityForServiceUnavailable(ex.getMessage());
     }
 }

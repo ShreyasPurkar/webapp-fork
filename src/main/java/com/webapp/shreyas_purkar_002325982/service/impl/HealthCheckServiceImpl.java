@@ -37,14 +37,14 @@ public class HealthCheckServiceImpl implements HealthCheckService {
 
         try {
            repository.save(entity);
-            log.info("Health check successful...");
+            log.info("Health check successful: {}", entity);
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
-            log.error("Health check failed");
+            log.error("Health check failed. Error: {}", ex.getMessage());
             throw new DatabaseConnectionException("Failed to persist health check log");
         } catch (Exception ex) {
-            log.error("Unexpected error during health check: {}", ex.getMessage());
+            log.error("Unexpected error during health check. Error:{}", ex.getMessage());
             throw new DatabaseConnectionException("Failed to persist health check log");
         }
     }
