@@ -8,6 +8,8 @@ import com.webapp.shreyas_purkar_002325982.exception.FileUploadException;
 import com.webapp.shreyas_purkar_002325982.exception.S3ObjectNotFoundException;
 import com.webapp.shreyas_purkar_002325982.repository.S3ObjectMetadataRepository;
 import com.webapp.shreyas_purkar_002325982.service.S3Service;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,9 @@ public class S3ServiceImpl implements S3Service {
     @Autowired
     S3ObjectMetadataRepository repository;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     private final S3Client s3Client;
 
     @Value("${aws.s3.bucket-name}")
@@ -64,6 +69,9 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public S3ObjectDto getObject(String id) {
+        meterRegistry.counter("api.get-object.count").increment();
+        Timer.Sample getFileApiTimer = Timer.start(meterRegistry);
+
         Optional<S3ObjectEntity> entity = findS3Object(id);
 
         if (entity.isEmpty()) {
@@ -80,6 +88,9 @@ public class S3ServiceImpl implements S3Service {
         dto.setContentLength(entity.get().getContentLength());
 
         log.info("Retrieved file with Id: {} successfully", id);
+
+        getFileApiTimer.stop(meterRegistry.timer("api.get-object.time"));
+
         return dto;
     }
 
@@ -94,7 +105,9 @@ public class S3ServiceImpl implements S3Service {
         Optional<S3ObjectEntity> entity;
 
         try {
+            Timer.Sample dbTimer = Timer.start(meterRegistry);
             entity = Optional.ofNullable(repository.findByObjectId(id));
+            dbTimer.stop(meterRegistry.timer("db.query.time"));
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
@@ -114,6 +127,9 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public S3ObjectDto uploadObject(MultipartFile file) {
+        meterRegistry.counter("api.file-upload-on-s3.count").increment();
+        Timer.Sample uploadFileApiTimer = Timer.start(meterRegistry);
+
         UUID fileId = UUID.randomUUID();
         log.info("UUID of the file is {}", fileId);
 
@@ -136,8 +152,9 @@ public class S3ServiceImpl implements S3Service {
         entity.setExtendedRequestId(metadata.get("x-amz-id-2").toString());
 
         try {
+            Timer.Sample dbTimer = Timer.start(meterRegistry);
             repository.save(entity);
-            log.info("Successfully persisted metadata for file with Id: {} in database", file);
+            dbTimer.stop(meterRegistry.timer("db.query.time"));
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
@@ -162,6 +179,10 @@ public class S3ServiceImpl implements S3Service {
         dto.setContentType(entity.getContentType());
         dto.setContentLength(entity.getContentLength());
 
+        log.info("Successfully persisted metadata for file with Id: {} in database", file);
+
+        uploadFileApiTimer.stop(meterRegistry.timer("api.file-upload-on-s3.time"));
+
         return dto;
     }
 
@@ -184,7 +205,9 @@ public class S3ServiceImpl implements S3Service {
                                                                .build();
 
         try {
+            Timer.Sample s3HeadApiTimer = Timer.start(meterRegistry);
             response = s3Client.headObject(headObjectRequest);
+            s3HeadApiTimer.stop(meterRegistry.timer("s3.call.time"));
         } catch (SdkClientException e) {
             log.error("S3 is unavailable. Failed to fetch metadata for file with Id: {} from S3 bucket: {} at path: {}. Error: {}", fileId, bucketName, key, e.getMessage());
             log.error("Deleting the file with Id: {} from S3 bucket: {} at path: {}", fileId, bucketName, key);
@@ -231,8 +254,9 @@ public class S3ServiceImpl implements S3Service {
                                                             .build();
 
         try {
+            Timer.Sample s3PutApiTimer = Timer.start(meterRegistry);
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-            log.info("Object with Id: {} uploaded successfully on bucket: {} at path: {}", fileId, bucketName, key);
+            s3PutApiTimer.stop(meterRegistry.timer("s3.call.time"));
         } catch (IOException e) {
             log.error("Failed to upload the file with Id: {} on S3 bucket: {} at path: {}. Error: {}", fileId, bucketName, key, e.getMessage());
             throw new FileUploadException("Failed to upload the file on S3 with Id: " + fileId);
@@ -241,6 +265,7 @@ public class S3ServiceImpl implements S3Service {
             throw new DatabaseConnectionException("S3 service is currently unavailable. Please try again later.");
         }
 
+        log.info("Object with Id: {} uploaded successfully on bucket: {} at path: {}", fileId, bucketName, key);
         return bucketName + "/" + key;
     }
 
@@ -251,6 +276,9 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public void deleteObject(String id) {
+        meterRegistry.counter("api.delete-file-on-s3.count").increment();
+        Timer.Sample deleteFileApiTimer = Timer.start(meterRegistry);
+
         Optional<S3ObjectEntity> entity = findS3Object(id);
 
         if (entity.isEmpty()) {
@@ -263,16 +291,20 @@ public class S3ServiceImpl implements S3Service {
         deleteS3Object(key, entity.get().getObjectId());
 
         try {
+            Timer.Sample dbTimer = Timer.start(meterRegistry);
             repository.delete(entity.get());
+            dbTimer.stop(meterRegistry.timer("db.query.time"));
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
             log.error("Failed to delete the file with Id: {} on S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, ex.getMessage());
             throw new DatabaseConnectionException("Failed to delete the S3 object metadata");
         } catch (Exception ex) {
-        log.error("Unexpected error occurred: {}", ex.getMessage());
-        throw new DatabaseConnectionException("Failed to delete the S3 object metadata");
+            log.error("Unexpected error occurred: {}", ex.getMessage());
+            throw new DatabaseConnectionException("Failed to delete the S3 object metadata");
         }
+
+        deleteFileApiTimer.stop(meterRegistry.timer("api.delete-file-on-s3.time"));
     }
 
     /**
@@ -289,9 +321,10 @@ public class S3ServiceImpl implements S3Service {
                                                                      .build();
 
         try {
+            Timer.Sample s3DeleteApiTimer = Timer.start(meterRegistry);
             s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(key).build());
             s3Client.deleteObject(deleteObjectRequest);
-            log.info("Successfully deleted file with Id: {} from S3 bucket: {} at path: {}", id, bucketName, key);
+            s3DeleteApiTimer.stop(meterRegistry.timer("s3.call.time"));
         } catch (SdkClientException e) {
             log.error("S3 is unavailable. Failed to delete file with Id: {} on S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, e.getMessage());
             throw new DatabaseConnectionException("S3 service is down. Please try again later.");
@@ -301,5 +334,7 @@ public class S3ServiceImpl implements S3Service {
             log.error("Unexpected issue while deleting file with Id: {} from S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, e.getMessage());
             throw new FileDeletionException("Failed to delete file with Id: " + id);
         }
+
+        log.info("Successfully deleted file with Id: {} from S3 bucket: {} at path: {}", id, bucketName, key);
     }
 }

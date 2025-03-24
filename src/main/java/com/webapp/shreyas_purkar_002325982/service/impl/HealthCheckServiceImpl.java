@@ -4,6 +4,8 @@ import com.webapp.shreyas_purkar_002325982.entity.HealthCheckEntity;
 import com.webapp.shreyas_purkar_002325982.exception.DatabaseConnectionException;
 import com.webapp.shreyas_purkar_002325982.repository.HealthCheckRepository;
 import com.webapp.shreyas_purkar_002325982.service.HealthCheckService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +29,24 @@ public class HealthCheckServiceImpl implements HealthCheckService {
     @Autowired
     HealthCheckRepository repository;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     /**
      * Method to monitor health of application instance
      */
     @Override
     public void healthCheck() {
+        meterRegistry.counter("api.healthcheck.count").increment();
+        Timer.Sample healthCheckApiTimer = Timer.start(meterRegistry);
+
         HealthCheckEntity entity = new HealthCheckEntity();
         entity.setDateTime(Instant.now());
 
         try {
-           repository.save(entity);
-            log.info("Health check successful: {}", entity);
+            Timer.Sample dbTimer = Timer.start(meterRegistry);
+            repository.save(entity);
+            dbTimer.stop(meterRegistry.timer("db.query.time"));
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
@@ -47,5 +56,9 @@ public class HealthCheckServiceImpl implements HealthCheckService {
             log.error("Unexpected error during health check. Error:{}", ex.getMessage());
             throw new DatabaseConnectionException("Failed to persist health check log");
         }
+
+        log.info("Health check successful: {}", entity);
+
+        healthCheckApiTimer.stop(meterRegistry.timer("api.healthcheck.time"));
     }
 }
