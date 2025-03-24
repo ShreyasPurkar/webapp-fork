@@ -31,6 +31,15 @@ log "Moving JAR file to application directory..."
 sudo chown ubuntu:ubuntu /opt/csye6225/webapp
 unzip -o /tmp/webapp.zip -d /opt/csye6225/webapp
 
+# Move the cloudwatch config file to the application directory
+log "Moving cloudwatch config file to application directory..."
+sudo cp /tmp/cloudwatch-config.json /opt/csye6225/webapp/aws/amazon-cloudwatch-agent/
+
+log "Creating log directory..."
+sudo mkdir -p /var/log/csye6225
+sudo chown -R csye6225:csye6225 /var/log/csye6225
+sudo chmod -R 700 /var/log/csye6225
+
 # Set proper permissions
 log "Setting proper permissions..."
 sudo chown -R csye6225:csye6225 /opt/csye6225
