@@ -127,6 +127,11 @@ build {
     timeout      = "30m"
   }
 
+  provisioner "file" {
+    source      = "./cloudwatch-config.json"
+    destination = "/tmp/cloudwatch-config.json"
+  }
+
   provisioner "shell" {
     scripts = [
       "./updateOs.sh",

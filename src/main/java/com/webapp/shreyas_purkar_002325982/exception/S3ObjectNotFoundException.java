@@ -5,7 +5,5 @@ package com.webapp.shreyas_purkar_002325982.exception;
  */
 public class S3ObjectNotFoundException extends RuntimeException {
 
-    public S3ObjectNotFoundException(String message) {
-        super(message);
-    }
+    public S3ObjectNotFoundException() {}
 }

@@ -29,7 +29,7 @@ public class HealthCheckApiImpl implements HealthCheckApi {
      */
     @Override
     public ResponseEntity<?> healthCheck(String payload) {
-        log.info("Initializing health check...");
+        log.info("Initializing health check for webapp...");
 
         if (payload != null && !payload.trim().isEmpty()) {
             log.error("Payload not allowed for health check: {}", payload);

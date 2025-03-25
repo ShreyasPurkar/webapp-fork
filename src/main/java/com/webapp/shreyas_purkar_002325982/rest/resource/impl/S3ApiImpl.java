@@ -30,7 +30,7 @@ public class S3ApiImpl implements S3Api {
      */
     @Override
     public ResponseEntity<S3ObjectDto> getObject(String id) {
-        log.info("Fetching S3 object with id {}...", id);
+        log.info("Fetching file with id {}...", id);
         S3ObjectDto dto = service.getObject(id);
         return ResponseEntity.status(HttpStatus.OK).body(dto);
     }
@@ -42,9 +42,10 @@ public class S3ApiImpl implements S3Api {
      */
     @Override
     public ResponseEntity<S3ObjectDto> uploadObject(MultipartFile file) {
-        log.info("Uploading file on S3...");
+        log.info("Initializing uploading of file on S3...");
         if (file.isEmpty()) {
-            throw new EmptyFileException("Uploaded file is empty. Please select a valid file.");
+            log.error("No file is uploaded. Please select a valid file");
+            throw new EmptyFileException();
         }
 
         S3ObjectDto dto = service.uploadObject(file);
@@ -58,7 +59,7 @@ public class S3ApiImpl implements S3Api {
      */
     @Override
     public ResponseEntity<?> deleteObject(String id) {
-        log.info("Deleting S3 object with id {}...", id);
+        log.info("Initializing deleting file with id {}...", id);
         service.deleteObject(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

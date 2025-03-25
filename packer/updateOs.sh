@@ -17,3 +17,4 @@ log "Installing required packages..."
 sudo apt install -y openjdk-17-jdk 
 sudo apt install -y maven
 sudo apt install -y unzip
+sudo apt-get install -y amazon-cloudwatch-agent

@@ -11,10 +11,6 @@ import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Global exception handler for API error scenarios
  */
@@ -25,13 +21,12 @@ public class GlobalExceptionHandler {
      * Exception to handle database connectivity issues
      */
     @ExceptionHandler(DatabaseConnectionException.class)
-    public ResponseEntity<Map<String, Object>> handleDatabaseConnectionException(DatabaseConnectionException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
-        errorResponse.put("error", HttpStatus.SERVICE_UNAVAILABLE.name());
-        errorResponse.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
+    public ResponseEntity<String> handleDatabaseConnectionException(DatabaseConnectionException ex) {
+        return getMapResponseEntityForServiceUnavailable();
+    }
+
+    private ResponseEntity<String> getMapResponseEntityForServiceUnavailable() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
     }
 
     /**
@@ -46,7 +41,7 @@ public class GlobalExceptionHandler {
      * Exception to handle unsupported HTTP methods
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<Map<String, Object>> handleMethodNotAllowedException(
+    public ResponseEntity<String> handleMethodNotAllowedException(
             HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
 
         String method = request.getMethod();
@@ -54,7 +49,7 @@ public class GlobalExceptionHandler {
 
         if (requestURI.startsWith("/v1/file")) {
             if (method.equalsIgnoreCase("GET") || method.equalsIgnoreCase("DELETE")) {
-                return getMapResponseEntityForBadRequest("This HTTP method is not allowed for this endpoint.");
+                return getMapResponseEntityForBadRequest();
             } else if (method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("PATCH")
                     || method.equalsIgnoreCase("HEAD") || method.equalsIgnoreCase("OPTIONS")
                     || method.equalsIgnoreCase("UPDATE")) {
@@ -82,22 +77,12 @@ public class GlobalExceptionHandler {
         return getMapResponseForMethodNotAllowed();
     }
 
-    private static ResponseEntity<Map<String, Object>> getMapResponseEntityForBadRequest(String message) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-        errorResponse.put("error", HttpStatus.BAD_REQUEST.name());
-        errorResponse.put("message", message);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    private static ResponseEntity<String> getMapResponseEntityForBadRequest() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-    private static ResponseEntity<Map<String, Object>> getMapResponseForMethodNotAllowed() {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.METHOD_NOT_ALLOWED.value());
-        errorResponse.put("error", HttpStatus.METHOD_NOT_ALLOWED.name());
-        errorResponse.put("message", "This HTTP method is not allowed for this endpoint.");
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(errorResponse);
+    private static ResponseEntity<String> getMapResponseForMethodNotAllowed() {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
     /**
@@ -112,53 +97,56 @@ public class GlobalExceptionHandler {
      * Exception to handle resource not found cases for S3
      */
     @ExceptionHandler(S3ObjectNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleS3ObjectNotFoundException(S3ObjectNotFoundException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.NOT_FOUND.value());
-        errorResponse.put("error", HttpStatus.NOT_FOUND.name());
-        errorResponse.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    public ResponseEntity<String> handleS3ObjectNotFoundException(S3ObjectNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     /**
      * Exception to handle incorrect content type (if request body is not multipart/form-data)
      */
     @ExceptionHandler(MultipartException.class)
-    public ResponseEntity<Map<String, Object>> handleMultipartException(MultipartException ex) {
-        return getMapResponseEntityForBadRequest("Invalid request. Only multipart/form-data is allowed.");
+    public ResponseEntity<String> handleMultipartException(MultipartException ex) {
+        return getMapResponseEntityForBadRequest();
     }
 
     /**
      * Exception to handle incorrect content type
      */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<Map<String, Object>> handleUnsupportedMediaType(
+    public ResponseEntity<String> handleUnsupportedMediaType(
             HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
-        return getMapResponseEntityForBadRequest("Invalid request. Only multipart/form-data is allowed.");
+        return getMapResponseEntityForBadRequest();
     }
 
     /**
      * Exception to handle missing file (invalid request)
      */
     @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingFileException(MissingServletRequestPartException ex) {
-        return getMapResponseEntityForBadRequest("File is required. Please upload a file.");
+    public ResponseEntity<String> handleMissingFileException(MissingServletRequestPartException ex) {
+        return getMapResponseEntityForBadRequest();
     }
 
     /**
      * Exception to handle empty file upload cases for S3
      */
     @ExceptionHandler(EmptyFileException.class)
-    public ResponseEntity<Map<String, Object>> handleEmptyFileException(EmptyFileException ex) {
-        return getMapResponseEntityForBadRequest(ex.getMessage());
+    public ResponseEntity<String> handleEmptyFileException(EmptyFileException ex) {
+        return getMapResponseEntityForBadRequest();
     }
 
     /**
      * Exception to handle file upload cases for S3
      */
     @ExceptionHandler(FileUploadException.class)
-    public ResponseEntity<Map<String, Object>> handleFileUploadException(FileUploadException ex) {
-        return getMapResponseEntityForBadRequest(ex.getMessage());
+    public ResponseEntity<String> handleFileUploadException(FileUploadException ex) {
+        return getMapResponseEntityForBadRequest();
+    }
+
+    /**
+     * Exception to handle file deletion failure
+     */
+    @ExceptionHandler
+    public ResponseEntity<String> handleFileDeletionException(FileDeletionException ex) {
+        return getMapResponseEntityForServiceUnavailable();
     }
 }

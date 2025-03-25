@@ -4,6 +4,8 @@ import com.webapp.shreyas_purkar_002325982.entity.HealthCheckEntity;
 import com.webapp.shreyas_purkar_002325982.exception.DatabaseConnectionException;
 import com.webapp.shreyas_purkar_002325982.repository.HealthCheckRepository;
 import com.webapp.shreyas_purkar_002325982.service.HealthCheckService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,25 +29,36 @@ public class HealthCheckServiceImpl implements HealthCheckService {
     @Autowired
     HealthCheckRepository repository;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     /**
      * Method to monitor health of application instance
      */
     @Override
     public void healthCheck() {
+        meterRegistry.counter("api.healthcheck.count").increment();
+        Timer.Sample healthCheckApiTimer = Timer.start(meterRegistry);
+
         HealthCheckEntity entity = new HealthCheckEntity();
         entity.setDateTime(Instant.now());
 
         try {
-           repository.save(entity);
-            log.info("Health check successful...");
+            Timer.Sample dbTimer = Timer.start(meterRegistry);
+            repository.save(entity);
+            dbTimer.stop(meterRegistry.timer("db.query.time"));
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
-            log.error("Health check failed");
-            throw new DatabaseConnectionException("Failed to persist health check log");
+            log.error("Health check failed. Error: {}", ex.getMessage());
+            throw new DatabaseConnectionException();
         } catch (Exception ex) {
-            log.error("Unexpected error during health check: {}", ex.getMessage());
-            throw new DatabaseConnectionException("Failed to persist health check log");
+            log.error("Unexpected error during health check. Error:{}", ex.getMessage());
+            throw new DatabaseConnectionException();
         }
+
+        log.info("Health check successful: {}", entity);
+
+        healthCheckApiTimer.stop(meterRegistry.timer("api.healthcheck.time"));
     }
 }
