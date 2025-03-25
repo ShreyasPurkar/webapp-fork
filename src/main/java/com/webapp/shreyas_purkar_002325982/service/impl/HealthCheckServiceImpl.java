@@ -50,7 +50,7 @@ public class HealthCheckServiceImpl implements HealthCheckService {
 
                 log.info("Health check successful: {}", entity);
             } finally {
-                dbTimer.stop(meterRegistry.timer("db.query.time"));
+                dbTimer.stop(meterRegistry.timer("db.persist-health-record.time"));
             }
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |

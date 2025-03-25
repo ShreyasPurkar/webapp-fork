@@ -115,7 +115,7 @@ public class S3ServiceImpl implements S3Service {
             log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
             throw new DatabaseConnectionException();
         } finally {
-            dbTimer.stop(meterRegistry.timer("db.query.time"));
+            dbTimer.stop(meterRegistry.timer("db.query-s3-object.time"));
         }
     }
 
@@ -159,7 +159,7 @@ public class S3ServiceImpl implements S3Service {
             try {
                 repository.save(entity);
             } finally {
-                dbTimer.stop(meterRegistry.timer("db.query.time"));
+                dbTimer.stop(meterRegistry.timer("db.persist-file-metadata.time"));
             }
 
             S3ObjectDto dto = new S3ObjectDto();
@@ -240,7 +240,7 @@ public class S3ServiceImpl implements S3Service {
 
             throw new FetchObjectMetadataException();
         } finally {
-            s3HeadApiTimer.stop(meterRegistry.timer("s3.call.time"));
+            s3HeadApiTimer.stop(meterRegistry.timer("s3.fetch-file-metadata.time"));
         }
     }
 
@@ -277,7 +277,7 @@ public class S3ServiceImpl implements S3Service {
             log.error("S3 is unavailable. Upload failed for file with Id: {}. on S3 bucket: {} at path: {}. Error: {}", fileId, bucketName, key, e.getMessage(), e);
             throw new DatabaseConnectionException();
         } finally {
-            s3PutApiTimer.stop(meterRegistry.timer("s3.call.time"));
+            s3PutApiTimer.stop(meterRegistry.timer("s3.upload-file.time"));
         }
     }
 
@@ -309,7 +309,7 @@ public class S3ServiceImpl implements S3Service {
             try {
                 repository.delete(entity.get());
             } finally {
-                dbTimer.stop(meterRegistry.timer("db.query.time"));
+                dbTimer.stop(meterRegistry.timer("db.delete-file-metadata.time"));
             }
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
@@ -354,7 +354,7 @@ public class S3ServiceImpl implements S3Service {
             log.error("Unexpected issue while deleting file with Id: {} from S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, e.getMessage(), e);
             throw new FileDeletionException();
         } finally {
-            s3DeleteApiTimer.stop(meterRegistry.timer("s3.call.time"));
+            s3DeleteApiTimer.stop(meterRegistry.timer("s3.delete-file.time"));
         }
     }
 }
