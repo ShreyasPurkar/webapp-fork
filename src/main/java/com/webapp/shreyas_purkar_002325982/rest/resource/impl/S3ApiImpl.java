@@ -44,7 +44,7 @@ public class S3ApiImpl implements S3Api {
     public ResponseEntity<S3ObjectDto> uploadObject(MultipartFile file) {
         log.info("Initializing uploading of file on S3...");
         if (file.isEmpty()) {
-            log.error("No file is uploaded. Please select a valid file");
+            log.warn("Bad Request - No file is uploaded. Please select a valid file");
             throw new EmptyFileException();
         }
 

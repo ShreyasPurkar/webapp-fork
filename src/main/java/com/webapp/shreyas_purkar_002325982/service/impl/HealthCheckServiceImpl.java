@@ -45,20 +45,23 @@ public class HealthCheckServiceImpl implements HealthCheckService {
 
         try {
             Timer.Sample dbTimer = Timer.start(meterRegistry);
-            repository.save(entity);
-            dbTimer.stop(meterRegistry.timer("db.query.time"));
+            try {
+                repository.save(entity);
+
+                log.info("Health check successful: {}", entity);
+            } finally {
+                dbTimer.stop(meterRegistry.timer("db.query.time"));
+            }
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
-            log.error("Health check failed. Error: {}", ex.getMessage());
+            log.error("Health check failed. Error: {}", ex.getMessage(), ex);
             throw new DatabaseConnectionException();
         } catch (Exception ex) {
-            log.error("Unexpected error during health check. Error:{}", ex.getMessage());
+            log.error("Unexpected error during health check. Error:{}", ex.getMessage(), ex);
             throw new DatabaseConnectionException();
+        } finally {
+            healthCheckApiTimer.stop(meterRegistry.timer("api.healthcheck.time"));
         }
-
-        log.info("Health check successful: {}", entity);
-
-        healthCheckApiTimer.stop(meterRegistry.timer("api.healthcheck.time"));
     }
 }
