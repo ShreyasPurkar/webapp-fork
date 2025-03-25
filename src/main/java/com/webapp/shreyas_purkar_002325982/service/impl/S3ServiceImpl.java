@@ -83,8 +83,6 @@ public class S3ServiceImpl implements S3Service {
             dto.setUrl(entity.get().getUrl());
             dto.setObjectId(entity.get().getObjectId());
             dto.setUploadDate(entity.get().getUploadDate());
-            dto.setContentType(entity.get().getContentType());
-            dto.setContentLength(entity.get().getContentLength());
 
             log.info("Retrieved file with Id: {} successfully", id);
             return dto;
@@ -169,8 +167,6 @@ public class S3ServiceImpl implements S3Service {
             dto.setUrl(entity.getUrl());
             dto.setObjectId(entity.getObjectId());
             dto.setUploadDate(entity.getUploadDate());
-            dto.setContentType(entity.getContentType());
-            dto.setContentLength(entity.getContentLength());
 
             log.info("Successfully persisted metadata for file with Id: {} in database", fileId);
             return dto;
