@@ -45,7 +45,7 @@ public class S3ApiImpl implements S3Api {
         log.info("Initializing uploading of file on S3...");
         if (file.isEmpty()) {
             log.error("No file is uploaded. Please select a valid file");
-            throw new EmptyFileException("No File is uploaded. Please select a valid file.");
+            throw new EmptyFileException();
         }
 
         S3ObjectDto dto = service.uploadObject(file);

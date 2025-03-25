@@ -51,10 +51,10 @@ public class HealthCheckServiceImpl implements HealthCheckService {
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
             log.error("Health check failed. Error: {}", ex.getMessage());
-            throw new DatabaseConnectionException("Failed to persist health check log");
+            throw new DatabaseConnectionException();
         } catch (Exception ex) {
             log.error("Unexpected error during health check. Error:{}", ex.getMessage());
-            throw new DatabaseConnectionException("Failed to persist health check log");
+            throw new DatabaseConnectionException();
         }
 
         log.info("Health check successful: {}", entity);

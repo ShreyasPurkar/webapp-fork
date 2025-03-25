@@ -145,6 +145,106 @@
 			"response": []
 		},
 		{
+			"name": "HealthCheck (Negative - OPTION Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 405\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "OPTIONS",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/healthz",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"healthz"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "value",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "HealthCheck (Negative - HEAD Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 405\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "HEAD",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/healthz",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"healthz"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "value",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "HealthCheck (Negative - Invalid Method)",
 			"event": [
 				{
@@ -179,6 +279,753 @@
 					],
 					"path": [
 						"healthz"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - GET Bad Request)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/purka/OneDrive/Pictures/Screenshots/Screenshot 2025-03-03 104732.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - DELETE Bad Request)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/purka/OneDrive/Pictures/Screenshots/Screenshot 2025-03-03 104732.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - HEAD Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 405\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "HEAD",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/purka/OneDrive/Pictures/Screenshots/Screenshot 2025-03-03 104732.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - OPTIONS Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 405\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "OPTIONS",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/purka/OneDrive/Pictures/Screenshots/Screenshot 2025-03-03 104732.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - PUT Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 405\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/purka/OneDrive/Pictures/Screenshots/Screenshot 2025-03-03 104732.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - Text Request)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "abc"
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - JSON Request)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": 123\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - Empty Request)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - Empty Form Data)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - No File)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UploadObject (Negative - Empty File)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetObjectMetadata (Negative - Resource Not Found)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}/d7792f37-1bda-4ea7-899b-a4e384fcd8fa",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}",
+						"d7792f37-1bda-4ea7-899b-a4e384fcd8fa"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteObject (Negative - Resource Not Found)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}/d7792f37-1bda-4ea7-899b-a4e384fcd8fa",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}",
+						"d7792f37-1bda-4ea7-899b-a4e384fcd8fa"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteObject (Negative - Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "HEAD",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}/d7792f37-1bda-4ea7-899b-a4e384fcd8fa",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}",
+						"d7792f37-1bda-4ea7-899b-a4e384fcd8fa"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteObject (Negative - Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is not empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "OPTIONS",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}/d7792f37-1bda-4ea7-899b-a4e384fcd8fa",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}",
+						"d7792f37-1bda-4ea7-899b-a4e384fcd8fa"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteObject (Negative - Method Not Allowed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cache-control header is no-cache\", function () {\r",
+							"    const contentType = pm.response.headers.get(\"Cache-Control\");\r",
+							"    pm.expect(contentType).to.equal(\"no-cache, no-store, must-revalidate\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/{{s3_url}}/d7792f37-1bda-4ea7-899b-a4e384fcd8fa",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{s3_url}}",
+						"d7792f37-1bda-4ea7-899b-a4e384fcd8fa"
 					]
 				}
 			},

@@ -76,7 +76,7 @@ public class S3ServiceImpl implements S3Service {
 
         if (entity.isEmpty()) {
             log.error("No file with Id: {} found in database.", id);
-            throw new S3ObjectNotFoundException("Unable to find the file with Id: " + id);
+            throw new S3ObjectNotFoundException();
         }
 
         S3ObjectDto dto = new S3ObjectDto();
@@ -112,10 +112,10 @@ public class S3ServiceImpl implements S3Service {
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
             log.error("Failed to retrieve the file with Id: {}. Error: {}", id, ex.getMessage());
-            throw new DatabaseConnectionException("Failed to retrieve the file with Id: " + id);
+            throw new DatabaseConnectionException();
         } catch (Exception ex) {
             log.error("Unexpected error occurred: {}", ex.getMessage());
-            throw new DatabaseConnectionException("Failed to retrieve the file with Id: " + id);
+            throw new DatabaseConnectionException();
         }
         return entity;
     }
@@ -162,13 +162,13 @@ public class S3ServiceImpl implements S3Service {
             log.error("Deleting the file with Id: {} from S3 bucket: {} at path: {}", fileId, bucketName, url);
             deleteS3Object(url.substring(url.indexOf("/") + 1), fileId.toString());
 
-            throw new DatabaseConnectionException("Failed to persist the S3 object metadata");
+            throw new DatabaseConnectionException();
         } catch (Exception ex) {
             log.error("Unexpected error occurred: {}", ex.getMessage());
             log.error("Deleting the file with Id: {} from S3 bucket: {} at path: {}", fileId, bucketName, url);
             deleteS3Object(url.substring(url.indexOf("/") + 1), fileId.toString());
 
-            throw new DatabaseConnectionException("Failed to persist the S3 object metadata");
+            throw new DatabaseConnectionException();
         }
 
         S3ObjectDto dto = new S3ObjectDto();
@@ -213,13 +213,13 @@ public class S3ServiceImpl implements S3Service {
             log.error("Deleting the file with Id: {} from S3 bucket: {} at path: {}", fileId, bucketName, key);
             deleteS3Object(key, fileId);
 
-            throw new DatabaseConnectionException("S3 service is down. Please try again later.");
+            throw new DatabaseConnectionException();
         } catch (Exception e) {
             log.error("Failed to fetch metadata for file with Id: {} from S3 bucket: {} at path: {}. Error: {}", fileId, bucketName, key, e.getMessage());
             log.error("Deleting the file with Id: {} from S3 bucket: {} at path: {}", fileId, bucketName, key);
             deleteS3Object(key, fileId);
 
-            throw new FileUploadException("Failed to upload the file on S3");
+            throw new FileUploadException();
         }
 
         Map<String, Object> metadata = new HashMap<>();
@@ -259,10 +259,10 @@ public class S3ServiceImpl implements S3Service {
             s3PutApiTimer.stop(meterRegistry.timer("s3.call.time"));
         } catch (IOException e) {
             log.error("Failed to upload the file with Id: {} on S3 bucket: {} at path: {}. Error: {}", fileId, bucketName, key, e.getMessage());
-            throw new FileUploadException("Failed to upload the file on S3 with Id: " + fileId);
+            throw new FileUploadException();
         } catch (SdkClientException e) {
             log.error("S3 is unavailable. Upload failed for file with Id: {}. on S3 bucket: {} at path: {}. Error: {}", fileId, bucketName, key, e.getMessage());
-            throw new DatabaseConnectionException("S3 service is currently unavailable. Please try again later.");
+            throw new DatabaseConnectionException();
         }
 
         log.info("Object with Id: {} uploaded successfully on bucket: {} at path: {}", fileId, bucketName, key);
@@ -283,7 +283,7 @@ public class S3ServiceImpl implements S3Service {
 
         if (entity.isEmpty()) {
             log.error("No file with Id: {} found in database.", id);
-            throw new S3ObjectNotFoundException("Unable to find the object with id " + id);
+            throw new S3ObjectNotFoundException();
         }
 
         String key = entity.get().getUrl().substring(bucketName.length() + 1);
@@ -298,10 +298,10 @@ public class S3ServiceImpl implements S3Service {
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
             log.error("Failed to delete the file with Id: {} on S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, ex.getMessage());
-            throw new DatabaseConnectionException("Failed to delete the S3 object metadata");
+            throw new DatabaseConnectionException();
         } catch (Exception ex) {
             log.error("Unexpected error occurred: {}", ex.getMessage());
-            throw new DatabaseConnectionException("Failed to delete the S3 object metadata");
+            throw new DatabaseConnectionException();
         }
 
         deleteFileApiTimer.stop(meterRegistry.timer("api.delete-file-on-s3.time"));
@@ -327,12 +327,12 @@ public class S3ServiceImpl implements S3Service {
             s3DeleteApiTimer.stop(meterRegistry.timer("s3.call.time"));
         } catch (SdkClientException e) {
             log.error("S3 is unavailable. Failed to delete file with Id: {} on S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, e.getMessage());
-            throw new DatabaseConnectionException("S3 service is down. Please try again later.");
+            throw new DatabaseConnectionException();
         } catch (NoSuchKeyException  e) {
             log.warn("File with Id: {} already deleted or does not exist on S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected issue while deleting file with Id: {} from S3 bucket: {} at path: {}. Error: {}", id, bucketName, key, e.getMessage());
-            throw new FileDeletionException("Failed to delete file with Id: " + id);
+            throw new FileDeletionException();
         }
 
         log.info("Successfully deleted file with Id: {} from S3 bucket: {} at path: {}", id, bucketName, key);
