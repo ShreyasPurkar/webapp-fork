@@ -32,12 +32,12 @@ public class HealthCheckApiImpl implements HealthCheckApi {
         log.info("Initializing health check for webapp...");
 
         if (payload != null && !payload.trim().isEmpty()) {
-            log.error("Payload not allowed for health check: {}", payload);
+            log.warn("Payload not allowed for health check: {}", payload);
             throw new PayloadNotAllowedException();
         }
 
         if (!request.getParameterMap().isEmpty()) {
-            log.error("Query params not allowed for health check");
+            log.warn("Query params not allowed for health check");
             throw new PayloadNotAllowedException();
         }
 

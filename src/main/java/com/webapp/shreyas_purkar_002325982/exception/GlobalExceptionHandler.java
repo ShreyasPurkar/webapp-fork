@@ -1,6 +1,8 @@
 package com.webapp.shreyas_purkar_002325982.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -17,11 +19,13 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /**
      * Exception to handle database connectivity issues
      */
     @ExceptionHandler(DatabaseConnectionException.class)
-    public ResponseEntity<String> handleDatabaseConnectionException(DatabaseConnectionException ex) {
+    public ResponseEntity<String> handleDatabaseConnectionException() {
         return getMapResponseEntityForServiceUnavailable();
     }
 
@@ -33,7 +37,7 @@ public class GlobalExceptionHandler {
      * Exception to handle the error case where the payload is passed in a GET request
      */
     @ExceptionHandler(PayloadNotAllowedException.class)
-    public ResponseEntity<String> handleInvalidPayloadException(PayloadNotAllowedException ex) {
+    public ResponseEntity<String> handleInvalidPayloadException() {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
@@ -49,11 +53,12 @@ public class GlobalExceptionHandler {
 
         if (requestURI.startsWith("/v1/file")) {
             if (method.equalsIgnoreCase("GET") || method.equalsIgnoreCase("DELETE")) {
+                log.warn("Bad Request - Incorrect HTTP Method: {}", ex.getMessage(), ex);
                 return getMapResponseEntityForBadRequest();
             } else if (method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("PATCH")
                     || method.equalsIgnoreCase("HEAD") || method.equalsIgnoreCase("OPTIONS")
                     || method.equalsIgnoreCase("UPDATE")) {
-                return getMapResponseForMethodNotAllowed();
+                return getMapResponseForMethodNotAllowed(ex);
             }
         }
 
@@ -62,7 +67,7 @@ public class GlobalExceptionHandler {
                     || method.equalsIgnoreCase("HEAD") || method.equalsIgnoreCase("OPTIONS")
                     || method.equalsIgnoreCase("UPDATE") || method.equalsIgnoreCase("DELETE")
             || method.equalsIgnoreCase("POST")) {
-                return getMapResponseForMethodNotAllowed();
+                return getMapResponseForMethodNotAllowed(ex);
             }
         }
 
@@ -70,18 +75,19 @@ public class GlobalExceptionHandler {
             if (method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("PATCH")
                     || method.equalsIgnoreCase("HEAD") || method.equalsIgnoreCase("OPTIONS")
                     || method.equalsIgnoreCase("UPDATE") || method.equalsIgnoreCase("POST")) {
-                return getMapResponseForMethodNotAllowed();
+                return getMapResponseForMethodNotAllowed(ex);
             }
         }
 
-        return getMapResponseForMethodNotAllowed();
+        return getMapResponseForMethodNotAllowed(ex);
     }
 
     private static ResponseEntity<String> getMapResponseEntityForBadRequest() {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-    private static ResponseEntity<String> getMapResponseForMethodNotAllowed() {
+    private static ResponseEntity<String> getMapResponseForMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        log.warn("Method Not Allowed: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
@@ -90,6 +96,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Void> handleNotFoundException(NoHandlerFoundException ex) {
+        log.warn("Not Handler Found: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
@@ -97,7 +104,7 @@ public class GlobalExceptionHandler {
      * Exception to handle resource not found cases for S3
      */
     @ExceptionHandler(S3ObjectNotFoundException.class)
-    public ResponseEntity<String> handleS3ObjectNotFoundException(S3ObjectNotFoundException ex) {
+    public ResponseEntity<String> handleS3ObjectNotFoundException() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
@@ -106,6 +113,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<String> handleMultipartException(MultipartException ex) {
+        log.warn("Bad Request - Invalid File Attached: {}", ex.getMessage(), ex);
         return getMapResponseEntityForBadRequest();
     }
 
@@ -114,7 +122,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<String> handleUnsupportedMediaType(
-            HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
+            HttpMediaTypeNotSupportedException ex) {
+        log.warn("Bad Request - Incorrect Content Type: {}", ex.getMessage(), ex);
         return getMapResponseEntityForBadRequest();
     }
 
@@ -123,6 +132,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<String> handleMissingFileException(MissingServletRequestPartException ex) {
+        log.warn("Bad Request: {}", ex.getMessage(), ex);
         return getMapResponseEntityForBadRequest();
     }
 
@@ -130,7 +140,7 @@ public class GlobalExceptionHandler {
      * Exception to handle empty file upload cases for S3
      */
     @ExceptionHandler(EmptyFileException.class)
-    public ResponseEntity<String> handleEmptyFileException(EmptyFileException ex) {
+    public ResponseEntity<String> handleEmptyFileException() {
         return getMapResponseEntityForBadRequest();
     }
 
@@ -138,15 +148,31 @@ public class GlobalExceptionHandler {
      * Exception to handle file upload cases for S3
      */
     @ExceptionHandler(FileUploadException.class)
-    public ResponseEntity<String> handleFileUploadException(FileUploadException ex) {
+    public ResponseEntity<String> handleFileUploadException() {
         return getMapResponseEntityForBadRequest();
     }
 
     /**
      * Exception to handle file deletion failure
      */
-    @ExceptionHandler
-    public ResponseEntity<String> handleFileDeletionException(FileDeletionException ex) {
+    @ExceptionHandler(FileDeletionException.class)
+    public ResponseEntity<String> handleFileDeletionException() {
         return getMapResponseEntityForServiceUnavailable();
+    }
+
+    /**
+     * Exception to handle fetch object metadata failure
+     */
+    @ExceptionHandler(FetchObjectMetadataException.class)
+    public ResponseEntity<String> handleFetchObjectMetadataException() {
+        return getMapResponseEntityForServiceUnavailable();
+    }
+
+    /**
+     * Exception to handle missing IAM credentials
+     */
+    @ExceptionHandler(AwsAuthorizationException.class)
+    public ResponseEntity<String> handleAwsAuthorizationException() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }
