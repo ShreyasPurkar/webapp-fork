@@ -33,6 +33,7 @@
         <java.version>17</java.version>
         <rest-assured-version>5.2.0</rest-assured-version>
         <aws-java-sdk-s3-version>2.25.29</aws-java-sdk-s3-version>
+        <aws-java-sdk-cloudwatch-version>2.20.49</aws-java-sdk-cloudwatch-version>
     </properties>
 
     <dependencies>
@@ -64,14 +65,17 @@
             <version>${aws-java-sdk-s3-version}</version>
         </dependency>
 
-        <!-- Micrometer for metrics -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
-        </dependency>
+    <!-- Micrometer for metrics -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-cloudwatch2</artifactId>
+        </dependency>
+
+    <!-- AWS SDK for S3 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>cloudwatch</artifactId>
+            <version>${aws-java-sdk-cloudwatch-version}</version>
         </dependency>
 
         <!-- Jackson for JSON handling -->
