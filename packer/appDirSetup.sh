@@ -33,6 +33,7 @@ unzip -o /tmp/webapp.zip -d /opt/csye6225/webapp
 
 # Move the cloudwatch config file to the application directory
 log "Moving cloudwatch config file to application directory..."
+sudo mkdir -p /opt/csye6225/webapp/aws/amazon-cloudwatch-agent/
 sudo cp /tmp/cloudwatch-config.json /opt/csye6225/webapp/aws/amazon-cloudwatch-agent/
 
 log "Creating log directory..."
