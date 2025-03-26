@@ -1,8 +1,11 @@
 package com.webapp.shreyas_purkar_002325982.util;
 
+import com.webapp.shreyas_purkar_002325982.service.impl.S3ServiceImpl;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -11,6 +14,8 @@ import java.util.List;
 
 @Component
 public class RequestFilter implements Filter {
+
+    private static final Logger log = LoggerFactory.getLogger(RequestFilter.class);
 
     private static final List<String> DISALLOWED_METHODS = Arrays.asList("HEAD", "OPTIONS");
 
@@ -34,8 +39,7 @@ public class RequestFilter implements Filter {
                         requestURI.startsWith("/healthz"))) {
 
             httpResponse.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-            httpResponse.setContentType("application/json");
-            httpResponse.getWriter().write("{ \"status\": 405, \"error\": \"Method Not Allowed\", \"message\": \"This HTTP method is not allowed for this endpoint.\" }");
+            log.warn("Method Not Allowed");
             return;
         }
 

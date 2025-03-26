@@ -4,6 +4,8 @@ import com.webapp.shreyas_purkar_002325982.dto.S3ObjectDto;
 import com.webapp.shreyas_purkar_002325982.exception.EmptyFileException;
 import com.webapp.shreyas_purkar_002325982.rest.resource.S3Api;
 import com.webapp.shreyas_purkar_002325982.service.S3Service;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ public class S3ApiImpl implements S3Api {
     @Autowired
     S3Service service;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     /**
      * API to get S3 object for given Id
      *
@@ -30,9 +35,17 @@ public class S3ApiImpl implements S3Api {
      */
     @Override
     public ResponseEntity<S3ObjectDto> getObject(String id) {
+        meterRegistry.counter("api.get-object.count").increment();
+        Timer.Sample getFileApiTimer = Timer.start(meterRegistry);
+
         log.info("Fetching file with id {}...", id);
-        S3ObjectDto dto = service.getObject(id);
-        return ResponseEntity.status(HttpStatus.OK).body(dto);
+
+        try {
+            S3ObjectDto dto = service.getObject(id);
+            return ResponseEntity.status(HttpStatus.OK).body(dto);
+        } finally {
+            getFileApiTimer.stop(meterRegistry.timer("api.get-object.time"));
+        }
     }
 
     /**
@@ -42,14 +55,22 @@ public class S3ApiImpl implements S3Api {
      */
     @Override
     public ResponseEntity<S3ObjectDto> uploadObject(MultipartFile file) {
-        log.info("Initializing uploading of file on S3...");
-        if (file.isEmpty()) {
-            log.warn("Bad Request - No file is uploaded. Please select a valid file");
-            throw new EmptyFileException();
-        }
+        meterRegistry.counter("api.file-upload-on-s3.count").increment();
+        Timer.Sample uploadFileApiTimer = Timer.start(meterRegistry);
 
-        S3ObjectDto dto = service.uploadObject(file);
-        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+        log.info("Initializing uploading of file on S3...");
+
+        try {
+            if (file.isEmpty()) {
+                log.warn("Bad Request - No file is uploaded. Please select a valid file");
+                throw new EmptyFileException();
+            }
+
+            S3ObjectDto dto = service.uploadObject(file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+        } finally {
+            uploadFileApiTimer.stop(meterRegistry.timer("api.file-upload-on-s3.time"));
+        }
     }
 
     /**
@@ -59,8 +80,17 @@ public class S3ApiImpl implements S3Api {
      */
     @Override
     public ResponseEntity<?> deleteObject(String id) {
+        meterRegistry.counter("api.delete-file-on-s3.count").increment();
+        Timer.Sample deleteFileApiTimer = Timer.start(meterRegistry);
+
         log.info("Initializing deleting file with id {}...", id);
-        service.deleteObject(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+        try {
+            service.deleteObject(id);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        } finally {
+            deleteFileApiTimer.stop(meterRegistry.timer("api.delete-file-on-s3.time"));
+        }
+
     }
 }
