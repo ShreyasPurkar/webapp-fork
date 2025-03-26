@@ -67,28 +67,21 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public S3ObjectDto getObject(String id) {
-        meterRegistry.counter("api.get-object.count").increment();
-        Timer.Sample getFileApiTimer = Timer.start(meterRegistry);
+        Optional<S3ObjectEntity> entity = findS3Object(id);
 
-        try {
-            Optional<S3ObjectEntity> entity = findS3Object(id);
-
-            if (entity.isEmpty()) {
-                log.error("No file with Id: {} found in database.", id);
-                throw new S3ObjectNotFoundException();
-            }
-
-            S3ObjectDto dto = new S3ObjectDto();
-            dto.setFileName(entity.get().getFileName());
-            dto.setUrl(entity.get().getUrl());
-            dto.setObjectId(entity.get().getObjectId());
-            dto.setUploadDate(entity.get().getUploadDate());
-
-            log.info("Retrieved file with Id: {} successfully", id);
-            return dto;
-        } finally {
-            getFileApiTimer.stop(meterRegistry.timer("api.get-object.time"));
+        if (entity.isEmpty()) {
+            log.error("No file with Id: {} found in database.", id);
+            throw new S3ObjectNotFoundException();
         }
+
+        S3ObjectDto dto = new S3ObjectDto();
+        dto.setFileName(entity.get().getFileName());
+        dto.setUrl(entity.get().getUrl());
+        dto.setObjectId(entity.get().getObjectId());
+        dto.setUploadDate(entity.get().getUploadDate());
+
+        log.info("Retrieved file with Id: {} successfully", id);
+        return dto;
     }
 
     /**
@@ -126,41 +119,30 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public S3ObjectDto uploadObject(MultipartFile file) {
-        meterRegistry.counter("api.file-upload-on-s3.count").increment();
-        Timer.Sample uploadFileApiTimer = Timer.start(meterRegistry);
-
         UUID fileId = UUID.randomUUID();
         log.info("UUID of the file is {}", fileId);
 
-        String url = null;
+        String url = uploadObjectToS3(file, fileId);
 
+        Map<String, Object> metadata = getObjectMetadata(url, fileId.toString());
 
         S3ObjectEntity entity = new S3ObjectEntity();
+        entity.setObjectId(fileId.toString());
+        entity.setUrl(url);
+        entity.setFileName(file.getOriginalFilename());
+        entity.setUploadDate(Instant.now());
+        entity.setContentLength(file.getSize());
+        entity.setContentType(file.getContentType());
+        entity.setEtag(metadata.get("ETag").toString());
+        entity.setAcceptRanges(metadata.get("AcceptRanges").toString());
+        entity.setServerSideEncryption(metadata.get("ServerSideEncryption").toString());
+        entity.setLastModified(metadata.get("LastModified").toString());
+        entity.setAwsRequestId(metadata.get("x-amz-request-id").toString());
+        entity.setExtendedRequestId(metadata.get("x-amz-id-2").toString());
 
+        Timer.Sample dbTimer = Timer.start(meterRegistry);
         try {
-            url = uploadObjectToS3(file, fileId);
-
-            Map<String, Object> metadata = getObjectMetadata(url, fileId.toString());
-
-            entity.setObjectId(fileId.toString());
-            entity.setUrl(url);
-            entity.setFileName(file.getOriginalFilename());
-            entity.setUploadDate(Instant.now());
-            entity.setContentLength(file.getSize());
-            entity.setContentType(file.getContentType());
-            entity.setEtag(metadata.get("ETag").toString());
-            entity.setAcceptRanges(metadata.get("AcceptRanges").toString());
-            entity.setServerSideEncryption(metadata.get("ServerSideEncryption").toString());
-            entity.setLastModified(metadata.get("LastModified").toString());
-            entity.setAwsRequestId(metadata.get("x-amz-request-id").toString());
-            entity.setExtendedRequestId(metadata.get("x-amz-id-2").toString());
-
-            Timer.Sample dbTimer = Timer.start(meterRegistry);
-            try {
-                repository.save(entity);
-            } finally {
-                dbTimer.stop(meterRegistry.timer("db.persist-file-metadata.time"));
-            }
+            repository.save(entity);
 
             S3ObjectDto dto = new S3ObjectDto();
             dto.setFileName(entity.getFileName());
@@ -185,7 +167,7 @@ public class S3ServiceImpl implements S3Service {
 
             throw new DatabaseConnectionException();
         } finally {
-            uploadFileApiTimer.stop(meterRegistry.timer("api.file-upload-on-s3.time"));
+            dbTimer.stop(meterRegistry.timer("db.persist-file-metadata.time"));
         }
     }
 
@@ -288,29 +270,20 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public void deleteObject(String id) {
-        meterRegistry.counter("api.delete-file-on-s3.count").increment();
-        Timer.Sample deleteFileApiTimer = Timer.start(meterRegistry);
+        Optional<S3ObjectEntity> entity = findS3Object(id);
 
-        String key = null;
+        if (entity.isEmpty()) {
+            log.error("No file with Id: {} found in database.", id);
+            throw new S3ObjectNotFoundException();
+        }
 
+        String key = entity.get().getUrl().substring(bucketName.length() + 1);
+
+        deleteS3Object(key, entity.get().getObjectId());
+
+        Timer.Sample dbTimer = Timer.start(meterRegistry);
         try {
-            Optional<S3ObjectEntity> entity = findS3Object(id);
-
-            if (entity.isEmpty()) {
-                log.error("No file with Id: {} found in database.", id);
-                throw new S3ObjectNotFoundException();
-            }
-
-            key = entity.get().getUrl().substring(bucketName.length() + 1);
-
-            deleteS3Object(key, entity.get().getObjectId());
-
-            Timer.Sample dbTimer = Timer.start(meterRegistry);
-            try {
-                repository.delete(entity.get());
-            } finally {
-                dbTimer.stop(meterRegistry.timer("db.delete-file-metadata.time"));
-            }
+            repository.delete(entity.get());
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
@@ -320,7 +293,7 @@ public class S3ServiceImpl implements S3Service {
             log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
             throw new DatabaseConnectionException();
         } finally {
-            deleteFileApiTimer.stop(meterRegistry.timer("api.delete-file-on-s3.time"));
+            dbTimer.stop(meterRegistry.timer("db.delete-file-metadata.time"));
         }
     }
 

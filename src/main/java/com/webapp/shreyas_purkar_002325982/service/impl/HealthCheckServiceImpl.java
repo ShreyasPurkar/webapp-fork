@@ -37,21 +37,14 @@ public class HealthCheckServiceImpl implements HealthCheckService {
      */
     @Override
     public void healthCheck() {
-        meterRegistry.counter("api.healthcheck.count").increment();
-        Timer.Sample healthCheckApiTimer = Timer.start(meterRegistry);
-
         HealthCheckEntity entity = new HealthCheckEntity();
         entity.setDateTime(Instant.now());
 
+        Timer.Sample dbTimer = Timer.start(meterRegistry);
         try {
-            Timer.Sample dbTimer = Timer.start(meterRegistry);
-            try {
-                repository.save(entity);
+            repository.save(entity);
 
-                log.info("Health check successful: {}", entity);
-            } finally {
-                dbTimer.stop(meterRegistry.timer("db.persist-health-record.time"));
-            }
+            log.info("Health check successful: {}", entity);
         } catch (CannotCreateTransactionException | InvalidDataAccessResourceUsageException |
                  DataIntegrityViolationException | DataAccessResourceFailureException |
                  PersistenceException ex) {
@@ -60,8 +53,8 @@ public class HealthCheckServiceImpl implements HealthCheckService {
         } catch (Exception ex) {
             log.error("Unexpected error during health check. Error:{}", ex.getMessage(), ex);
             throw new DatabaseConnectionException();
-        } finally {
-            healthCheckApiTimer.stop(meterRegistry.timer("api.healthcheck.time"));
+        }  finally {
+            dbTimer.stop(meterRegistry.timer("db.persist-health-record.time"));
         }
     }
 }
