@@ -111,7 +111,7 @@ jobs:
           name: webapp-zip
           path: target        
       
-      # Step 3: Set up AWS credentials    
+      # Step 3: Set up AWS credentials for DEV account  
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -145,3 +145,73 @@ jobs:
             webapp.pkr.hcl
         env:
           PACKER_LOG: 1
+      
+      # Step 7: Set up AWS credentials for DEMO account
+      - name: Reconfigure AWS for DEMO Account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 8: Create a new Launch template version for the new AMI    
+      - name: Create New Launch Template Version
+        run: |
+          LAUNCH_TEMPLATE_ID="${{ secrets.LAUNCH_TEMPLATE_ID }}"
+          AMI_ID=$(jq -r '.builds[-1].artifact_id' packer/manifest.json | cut -d ':' -f2)
+          echo "Using AMI: $AMI_ID"
+
+          VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id "$LAUNCH_TEMPLATE_ID" \
+            --source-version 1 \
+            --launch-template-data "{\"ImageId\":\"$AMI_ID\"}" \
+            --query 'LaunchTemplateVersion.VersionNumber' \
+            --output text)
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # Step 9: Update Auto Scaling Group to Use Latest Launch Template Version
+      - name: Update Auto Scaling Group
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
+            --launch-template "LaunchTemplateId=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=$VERSION"
+
+      # Step 10: Refresh the Auto Scaling Group with the new Launch Template version
+      - name: Start Instance Refresh
+        id: instance-refresh
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
+            --strategy Rolling \
+            --query 'InstanceRefreshId' \
+            --output text)
+
+          echo "refresh_id=$REFRESH_ID" >> $GITHUB_OUTPUT
+
+      # Step 11: Wait for the Instance Refresh to complete
+      - name: Wait for Instance Refresh to Complete
+        run: |
+          REFRESH_ID=${{ steps.instance-refresh.outputs.refresh_id }}
+          ASG_NAME="${{ secrets.ASG_NAME }}"
+      
+          echo "Waiting for instance refresh $REFRESH_ID on ASG $ASG_NAME..."
+      
+          STATUS="InProgress"
+          while [ "$STATUS" == "InProgress" ]; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name "$ASG_NAME" \
+              --instance-refresh-ids "$REFRESH_ID" \
+              --query 'InstanceRefreshes[0].Status' \
+              --output text)
+            
+            echo "Current refresh status: $STATUS"
+            sleep 15
+          done
+      
+          if [ "$STATUS" == "Successful" ]; then
+            echo "Instance refresh completed successfully."
+          else
+            echo "Instance refresh failed with status: $STATUS"
+            exit 1
+          fi
