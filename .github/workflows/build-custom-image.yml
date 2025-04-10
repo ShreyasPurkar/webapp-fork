@@ -142,7 +142,10 @@ jobs:
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
             -var "github_workspace=${{ github.workspace }}" \
             -var "aws_region=${{ env.AWS_REGION }}" \
-            webapp.pkr.hcl
+            webapp.pkr.hcl | tee /tmp/packer-output.log | grep 'artifact,0,id' | cut -d, -f6 | cut -d: -f2)
+            
+          echo "Extracted AMI ID: $AMI_ID"
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
         env:
           PACKER_LOG: 1
       
@@ -157,17 +160,14 @@ jobs:
       # Step 8: Create a new Launch template version for the new AMI    
       - name: Create New Launch Template Version
         run: |
-          LAUNCH_TEMPLATE_ID="${{ secrets.LAUNCH_TEMPLATE_ID }}"
-          AMI_ID=$(jq -r '.builds[-1].artifact_id' packer/manifest.json | cut -d ':' -f2)
-          echo "Using AMI: $AMI_ID"
-
           VERSION=$(aws ec2 create-launch-template-version \
             --launch-template-id "$LAUNCH_TEMPLATE_ID" \
             --source-version 1 \
-            --launch-template-data "{\"ImageId\":\"$AMI_ID\"}" \
+            --launch-template-data "{\"ImageId\":\"${{ steps.build-ami.outputs.ami_id }}\"}" \
             --query 'LaunchTemplateVersion.VersionNumber' \
             --output text)
-
+          
+          echo "Launch Template Version: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       # Step 9: Update Auto Scaling Group to Use Latest Launch Template Version
@@ -175,11 +175,10 @@ jobs:
         run: |
           aws autoscaling update-auto-scaling-group \
             --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
-            --launch-template "LaunchTemplateId=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=$VERSION"
+            --launch-template "LaunchTemplateId=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=${{ steps.lt-version.outputs.version }}"
 
       # Step 10: Refresh the Auto Scaling Group with the new Launch Template version
       - name: Start Instance Refresh
-        id: instance-refresh
         run: |
           REFRESH_ID=$(aws autoscaling start-instance-refresh \
             --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
