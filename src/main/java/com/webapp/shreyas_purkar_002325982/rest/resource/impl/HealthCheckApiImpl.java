@@ -59,8 +59,8 @@ public class HealthCheckApiImpl implements HealthCheckApi {
         }
     }
 
-//    @Override
-    public ResponseEntity<?> healthCheckCicd(String payload) throws HttpRequestMethodNotSupportedException {
+    @Override
+    public ResponseEntity<?> healthCheckCicd(String payload) {
         return healthCheck(payload);
     }
 }
