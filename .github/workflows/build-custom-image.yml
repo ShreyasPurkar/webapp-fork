@@ -204,20 +204,34 @@ jobs:
           
           echo "Waiting for instance refresh $REFRESH_ID on ASG $ASG_NAME..."
           
-          STATUS="InProgress"
-          while [ "$STATUS" == "InProgress" ]; do
+          STATUS="Pending"
+          ATTEMPTS=0
+          MAX_ATTEMPTS=50 
+          
+          while { [ "$STATUS" == "Pending" ] || [ "$STATUS" == "InProgress" ]; } && [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
             STATUS=$(aws autoscaling describe-instance-refreshes \
               --auto-scaling-group-name "$ASG_NAME" \
               --instance-refresh-ids "$REFRESH_ID" \
               --query 'InstanceRefreshes[0].Status' \
               --output text)
           
-            echo "Current refresh status: $STATUS"
-            sleep 15
+            echo "Attempt $((ATTEMPTS + 1)) - Current status: $STATUS"
+          
+            if [ "$STATUS" == "Successful" ]; then
+              echo "Instance refresh completed successfully."
+              exit 0
+            fi
+          
+            sleep 30
+            ATTEMPTS=$((ATTEMPTS + 1))
           done
           
+          # Final status check
           if [ "$STATUS" == "Successful" ]; then
             echo "Instance refresh completed successfully."
+            exit 0
+          elif [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+            echo "Timeout reached after $MAX_ATTEMPTS attempts (~10 minutes). Last status: $STATUS"
           else
             echo "Instance refresh failed with status: $STATUS"
             exit 1
