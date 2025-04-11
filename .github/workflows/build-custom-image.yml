@@ -111,7 +111,7 @@ jobs:
           name: webapp-zip
           path: target        
       
-      # Step 3: Set up AWS credentials for DEV account
+      # Step 3: Set up AWS credentials for DEV account  
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
