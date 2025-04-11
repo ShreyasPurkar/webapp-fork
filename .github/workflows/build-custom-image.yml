@@ -154,6 +154,8 @@ jobs:
           fi
           
           echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+        env:
+          PACKER_LOG: 1
 
       # Step 7: Reconfigure AWS credentials for DEMO account
       - name: Reconfigure AWS for DEMO Account
