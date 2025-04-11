@@ -111,7 +111,7 @@ jobs:
           name: webapp-zip
           path: target        
       
-      # Step 3: Set up AWS credentials    
+      # Step 3: Set up AWS credentials for DEV account
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -132,16 +132,107 @@ jobs:
           packer init .      
       
       # Step 6: Build the custom image using Packer    
-      - name: Build Image
+      - name: Build Image and Extract AMI ID
+        id: build-ami
         run: |
           cd packer
-          packer build -color=false -on-error=abort \
-            -var "aws_demo_account_id=${{ secrets.AWS_DEMO_ACCOUNT_ID }}" \
-            -var "db_name=${{ secrets.DB_NAME }}" \
-            -var "db_username=${{ secrets.DB_USERNAME }}" \
-            -var "db_password=${{ secrets.DB_PASSWORD }}" \
-            -var "github_workspace=${{ github.workspace }}" \
-            -var "aws_region=${{ env.AWS_REGION }}" \
-            webapp.pkr.hcl
-        env:
-          PACKER_LOG: 1
+          AMI_ID=$(packer build -machine-readable -color=false -on-error=abort \
+          -var "aws_demo_account_id=${{ secrets.AWS_DEMO_ACCOUNT_ID }}" \
+          -var "db_name=${{ secrets.DB_NAME }}" \
+          -var "db_username=${{ secrets.DB_USERNAME }}" \
+          -var "db_password=${{ secrets.DB_PASSWORD }}" \
+          -var "github_workspace=${{ github.workspace }}" \
+          -var "aws_region=${{ env.AWS_REGION }}" \
+          webapp.pkr.hcl | tee /tmp/packer-output.log | grep 'artifact,0,id' | cut -d, -f6 | cut -d: -f2)
+          
+          echo "Extracted AMI ID: $AMI_ID"
+          
+          if [ -z "$AMI_ID" ]; then
+          echo "AMI ID extraction failed."
+          cat /tmp/packer-output.log
+          exit 1
+          fi
+          
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+
+      # Step 7: Reconfigure AWS credentials for DEMO account
+      - name: Reconfigure AWS for DEMO Account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 8: Create a new launch template version with the new AMI ID    
+      - name: Create New Launch Template Version
+        id: lt-version
+        run: |
+          VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id "${{ secrets.LAUNCH_TEMPLATE_ID }}" \
+            --source-version 1 \
+            --launch-template-data "{\"ImageId\":\"${{ steps.build-ami.outputs.ami_id }}\"}" \
+            --query 'LaunchTemplateVersion.VersionNumber' \
+            --output text)
+          
+          echo "Launch Template Version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # Step 9: Update the Auto Scaling Group with the new launch template version    
+      - name: Update Auto Scaling Group
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
+            --launch-template "LaunchTemplateId=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=${{ steps.lt-version.outputs.version }}"
+
+      # Step 10: Start Instance Refresh for the Auto Scaling Group      
+      - name: Start Instance Refresh
+        id: instance-refresh
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
+            --strategy Rolling \
+            --query 'InstanceRefreshId' \
+            --output text)
+          
+          echo "refresh_id=$REFRESH_ID" >> $GITHUB_OUTPUT
+
+      # Step 11: Wait for Instance Refresh to Complete    
+      - name: Wait for Instance Refresh to Complete
+        run: |
+          REFRESH_ID=${{ steps.instance-refresh.outputs.refresh_id }}
+          ASG_NAME="${{ secrets.ASG_NAME }}"
+          
+          echo "Waiting for instance refresh $REFRESH_ID on ASG $ASG_NAME..."
+          
+          STATUS="Pending"
+          ATTEMPTS=0
+          MAX_ATTEMPTS=50 
+          
+          while { [ "$STATUS" == "Pending" ] || [ "$STATUS" == "InProgress" ]; } && [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name "$ASG_NAME" \
+              --instance-refresh-ids "$REFRESH_ID" \
+              --query 'InstanceRefreshes[0].Status' \
+              --output text)
+          
+            echo "Attempt $((ATTEMPTS + 1)) - Current status: $STATUS"
+          
+            if [ "$STATUS" == "Successful" ]; then
+              echo "Instance refresh completed successfully."
+              exit 0
+            fi
+          
+            sleep 30
+            ATTEMPTS=$((ATTEMPTS + 1))
+          done
+          
+          # Final status check
+          if [ "$STATUS" == "Successful" ]; then
+            echo "Instance refresh completed successfully."
+            exit 0
+          elif [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+            echo "Timeout reached after $MAX_ATTEMPTS attempts (~10 minutes). Last status: $STATUS"
+          else
+            echo "Instance refresh failed with status: $STATUS"
+            exit 1
+          fi
