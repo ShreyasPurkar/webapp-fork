@@ -15,4 +15,7 @@ public interface HealthCheckApi {
      */
     @GetMapping("/healthz")
     ResponseEntity<?> healthCheck(@RequestBody(required = false) String payload) throws HttpRequestMethodNotSupportedException;
+
+    @GetMapping("/cicd")
+    ResponseEntity<?> healthCheckCicd(@RequestBody(required = false) String payload) throws HttpRequestMethodNotSupportedException;
 }

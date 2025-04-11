@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -56,5 +57,10 @@ public class HealthCheckApiImpl implements HealthCheckApi {
         } finally {
             healthCheckApiTimer.stop(meterRegistry.timer("api.healthcheck.time"));
         }
+    }
+
+    @Override
+    public ResponseEntity<?> healthCheckCicd(String payload) throws HttpRequestMethodNotSupportedException {
+        return healthCheck(payload);
     }
 }
