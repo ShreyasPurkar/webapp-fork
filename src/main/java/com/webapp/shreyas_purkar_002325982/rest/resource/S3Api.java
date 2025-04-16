@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * Interface for handling API request for file uploads on s3
  */
-@RequestMapping("/v1/file")
+@RequestMapping("/v2/file")
 public interface S3Api {
 
     /**
